@@ -44,8 +44,8 @@ namespace muggy::graphics::vulkan::shaders
         // Get the paths for compiled shader location
         // These paths are relative to the engine-binary
         constexpr const char* engineShaderPaths[2]{
-            "../resources/vert.spv",
-            "../resources/frag.spv"
+            "../resources/triangleVert.spv",
+            "../resources/triangleFrag.spv"
         };
 
         // Each element in this array points to an offset within the 
