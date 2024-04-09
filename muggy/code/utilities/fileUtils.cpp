@@ -69,7 +69,7 @@ namespace muggy::utils
         if ( std::filesystem::exists( path ) )
         {
             // Use readFileBinary
-            return readFileBinary( path.c_str(), data, size );
+            return readFileBinary( path.string(), data, size );
         }
         return false;
     }

@@ -107,7 +107,8 @@ project "muggy"
             "vulkan"
         }
     end
-    targetdir (outputDir)
+    targetdir ( outputDir )
+    debugdir ( outputDir )
     objdir ( "!" .. intermediateDir .. "/%{prj.name}" )
 --    rtti "off"
 --    floatingpoint "fast"
@@ -227,7 +228,8 @@ project "muggyExample"
             "vulkan"
         }
     end    
-    targetdir (outputDir)
+    targetdir ( outputDir )
+    debugdir ( outputDir )
     objdir ( "!" .. intermediateDir .. "/%{prj.name}" )
 --    rtti "off"
 --    floatingpoint "fast"
