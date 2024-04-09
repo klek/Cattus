@@ -16,6 +16,13 @@ namespace muggy::graphics
 {
     namespace // Anonymous namespace, ie only for use in this cpp-file
     {
+        // Temporary solution for paths to compiled engine-shader blobs
+        constexpr const char* engineShaderPaths[]{
+            "../resources/opengl/shadersBlob.bin",
+            "../resources/d3d12/shadersBlob.bin",
+            "../resources/vulkan/shadersBlob.bin",
+        };
+
         platform_interface gfx{};
 
         bool setPlatformInterface( graphics_platform platform )
@@ -64,6 +71,9 @@ namespace muggy::graphics
                 }
             }
 
+            // Check that the requested api was set up
+            assert( gfx.platform == platform );
+
             // If we reach here we have an interface?
             return true;
         }
@@ -83,7 +93,20 @@ namespace muggy::graphics
 
     void shutdown( void )
     {
-        gfx.shutdown();
+        if ( gfx.platform != ( (graphics_platform)-1 ) ) 
+        {
+            gfx.shutdown();
+        }
+    }
+
+    const char* getEngineShadersPath( void )
+    {
+        return engineShaderPaths[ (uint32_t)gfx.platform ];
+    }
+
+    const char* getEngineShadersPath( graphics_platform platform )
+    {
+        return engineShaderPaths[ (uint32_t)platform ];
     }
 
     void surface::resize( uint32_t width, uint32_t height ) const

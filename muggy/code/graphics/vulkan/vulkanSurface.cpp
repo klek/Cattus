@@ -10,6 +10,7 @@
 #include "vulkanCore.h"
 #include "vulkanRenderPass.h"
 #include "vulkanResources.h"
+#include "vulkanGraphicsPipeline.h"
 
 namespace muggy::graphics::vulkan
 {
@@ -133,6 +134,8 @@ namespace muggy::graphics::vulkan
         // TODO(klek): Add check to the swapchain creation
         createSwapchain( );
         createRenderpass( );
+        // TODO(klek): Add the creation of the graphics pipeline
+        pipeline::createGraphicsPipeline( core::getLogicalDevice(), m_Renderpass.renderPass );
         // TODO(klek): Add check to the framebuffer creation
         reCreateFramebuffers( );
         // TODO(klek): Add check to the graphics command creation
@@ -154,8 +157,11 @@ namespace muggy::graphics::vulkan
         info.pImageIndices = &m_ImageIndex;
         VkResult result { VK_SUCCESS };
         result = vkQueuePresentKHR( presentationQueue, &info );
-        if ( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR )
+        if ( result == VK_ERROR_OUT_OF_DATE_KHR || 
+             result == VK_SUBOPTIMAL_KHR || 
+             m_IsFrameBufferResized )
         {
+            m_IsFrameBufferResized = false;
             reCreateSwapchain();
         }
         else if ( result != VK_SUCCESS )
@@ -318,14 +324,16 @@ namespace muggy::graphics::vulkan
 
     bool vulkan_surface::createSwapchain( void )
     {
-        // We pick the bes settings for the swapchain based on the
+        // We pick the best settings for the swapchain based on the
         // swapchain details from the physical device
         m_Swapchain.details = getSwapchainDetails( core::getPhysicalDevice(), m_Surface );
 
         // Find optimal surface values for the swapchain
         VkSurfaceFormatKHR format { chooseBestSurfaceFormat( m_Swapchain.details.formats ) };
         VkPresentModeKHR mode { chooseBestPresentationMode( m_Swapchain.details.presentationModes ) };
-        VkExtent2D extent { chooseBestSwapExtent( m_Swapchain.details.surfaceCapabilities, m_Window.getWidth(), m_Window.getHeight() ) };
+        VkExtent2D extent { chooseBestSwapExtent( m_Swapchain.details.surfaceCapabilities, 
+                                                  m_Window.getWidth(), 
+                                                  m_Window.getHeight() ) };
 
         uint32_t imagesInFlight = m_Swapchain.details.surfaceCapabilities.minImageCount + 1;
         // NOTE(klek): At this point, in a typical situation, imagesInFlight 
@@ -356,7 +364,7 @@ namespace muggy::graphics::vulkan
         info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         // Transform to perform on swapchain images
         info.preTransform = m_Swapchain.details.surfaceCapabilities.currentTransform;
-        // How to handle blending iamges with external graphics (such as 
+        // How to handle blending images with external graphics (such as 
         // other windos, OS UIs etc)
         info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         // Clip parts of images not in view? (ie offscreen, behind 
@@ -545,8 +553,10 @@ namespace muggy::graphics::vulkan
         {
             destroyFrameBuffer( core::getLogicalDevice(), m_FrameBuffers[ i ] );
         }
-        renderpass::destroyRenderPass( core::getLogicalDevice(), m_Renderpass );
         cleanSwapchain();
+
+        pipeline::shutdown( core::getLogicalDevice() );
+        renderpass::destroyRenderPass( core::getLogicalDevice(), m_Renderpass );
         vkDestroySurfaceKHR( core::getInstance(), m_Surface, nullptr );
     }
 

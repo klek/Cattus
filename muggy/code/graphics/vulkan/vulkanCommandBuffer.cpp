@@ -98,7 +98,7 @@ namespace muggy::graphics::vulkan
 
     // Function to end the command buffer
     // Sets the internal recording state to ended
-    void endCmdBuffer( vulkan_cmd_buffer& cmdBuffer )
+    bool endCmdBuffer( vulkan_cmd_buffer& cmdBuffer )
     {
         VkResult result { VK_SUCCESS };
         // TODO(klek): Check to make sure the buffer can be ended before ending
@@ -106,10 +106,13 @@ namespace muggy::graphics::vulkan
         if ( result != VK_SUCCESS )
         {
             MSG("Failed to end command buffer...");
+            return false;
         }
 
         // Set state to ended
         cmdBuffer.cmdState = vulkan_cmd_buffer::CMD_RECORDING_ENDED;
+
+        return true;
     }
 
     // Function to set the internal state to submitted

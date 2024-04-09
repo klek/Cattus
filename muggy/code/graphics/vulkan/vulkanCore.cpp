@@ -12,6 +12,8 @@
 #include "vulkanSurface.h"
 #include "vulkanCommandBuffer.h"
 #include "vulkanRenderPass.h"
+#include "vulkanShaders.h"
+#include "vulkanGraphicsPipeline.h"
 #include <set>
 #include <map>
 
@@ -168,14 +170,18 @@ namespace muggy::graphics::vulkan::core
                 uint32_t frame{ surface->getCurrentFrame() };
 
                 // Wait for fence signaling the current frame is complete
-                if ( !waitForFence( core::getLogicalDevice(), m_DrawFences[frame], uint64_invalid_id ) )
+                if ( !waitForFence( core::getLogicalDevice(), 
+                                    m_DrawFences[ frame ], 
+                                    uint64_invalid_id ) )
                 {
                     MSG("Draw fence failure...");
                     return false;
                 }
 
                 // Get the next swapchain image
-                if ( !surface->nextImageIndex( m_ImageAvailable[frame], nullptr, uint64_invalid_id ) )
+                if ( !surface->nextImageIndex( m_ImageAvailable[ frame ], 
+                                               nullptr, 
+                                               uint64_invalid_id ) )
                 {
                     MSG("Could not get the next swapchain image...");
                     return false;
@@ -216,6 +222,11 @@ namespace muggy::graphics::vulkan::core
                                              surface->renderpass(),
                                              surface->currentFrameBuffer() );
 
+                // Bind the pipeline
+                vkCmdBindPipeline( cmdBuffer.cmdBuffer, 
+                                   VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                   pipeline::getGraphicsPipeline() );
+
                 return true;
             }
 
@@ -223,6 +234,10 @@ namespace muggy::graphics::vulkan::core
             {
                 uint32_t frame{ surface->getCurrentFrame() };
                 vulkan_cmd_buffer& cmdBuffer{ m_CmdBuffers[ frame ] };
+
+                // TODO(klek): Determine if this draw should be a 
+                // separate member function
+                vkCmdDraw( cmdBuffer.cmdBuffer, 3, 1, 0, 0 );
 
                 renderpass::endRenderPass( cmdBuffer.cmdBuffer, 
                                            cmdBuffer.cmdState, 
@@ -786,7 +801,7 @@ namespace muggy::graphics::vulkan::core
         // If we already have an instance, then we shutdown
         if ( instance )
         {
-            failedInit();
+            return failedInit();
         }
 
         // Initialize volk
@@ -795,13 +810,24 @@ namespace muggy::graphics::vulkan::core
         //     failedInit();
         // }
 
+        //************************************************************
+        // Submodules
+        // Initialize the shader submodule
+        if ( !shaders::initialize() )
+        {
+            return failedInit();
+        }
+        // TODO(klek): Add renderpass pipeline
+        // TODO(klek): Add graphics pipeline
+        //************************************************************
+
         // Check if validation layers should be used and are 
         // available
         if ( ENABLE_VALIDATION_LAYERS && !isValidationLayerSupported() )
         {
             // TODO(klek): Set this to an error message
             MSG("Validation layers requested, but not available...");
-            failedInit();
+            return failedInit();
         }
 
         // Set up the application info struct
@@ -833,7 +859,7 @@ namespace muggy::graphics::vulkan::core
         if ( !isInstanceExtensionsSupported( extensions ) )
         {
             MSG("VKInstance does not support the required extensions...");
-            failedInit();
+            return failedInit();
         }
 
         // Set up the creation info struct
@@ -872,7 +898,7 @@ namespace muggy::graphics::vulkan::core
         {
             // TODO(klek): Set this to an error message
             MSG("Failed to create vulkan instance...");
-            failedInit();
+            return failedInit();
         }
 
         // Volk load instance
@@ -892,7 +918,7 @@ namespace muggy::graphics::vulkan::core
             if ( result != VK_SUCCESS )
             {
                 MSG("Failed to setup vulkan debug messenger...");
-                failedInit();
+                return failedInit();
             }
 
             MSG("Vulkan validation layer has been created!");
@@ -907,6 +933,13 @@ namespace muggy::graphics::vulkan::core
     {
         // Release the command
         gfxCmd.release();
+
+        // Shutdown submodules
+        shaders::shutdown();
+        // TODO(klek): Add the graphics pipeline
+        //pipeline::shutdown( deviceGroup.logicalDevice );
+
+        // TODO(klek): Add renderpass 
 
         // TODO(klek): Destroy the device we have created
         vkDestroyDevice( deviceGroup.logicalDevice, nullptr );
@@ -1012,7 +1045,6 @@ namespace muggy::graphics::vulkan::core
         return -1;
     }
 
-
     //****************************************************************
     // Helper functions
     uint32_t getGraphicsFamilyQueueIndex( void )
@@ -1088,8 +1120,12 @@ namespace muggy::graphics::vulkan::core
     {
         if ( gfxCmd.beginFrame( &surfaces[ id ] ) )
         {
-            // TODO(klek): Add some "meat" here and present
-            // ..
+            // TODO(klek): Add binding of the graphics pipeline
+            // vkCmdBindPipeline( gfxCmd.commandBuffer, 
+            //                    VK_PIPELINE_BIND_POINT_GRAPHICS, 
+            //                    graphicsPipeline );
+            // TODO(klek): Add the drawCmd
+            // vkCmdDraw( gfxCmd.commandBuffer, 3, 1, 0, 0 );
             // ..
 
             gfxCmd.endFrame( &surfaces[ id ] );

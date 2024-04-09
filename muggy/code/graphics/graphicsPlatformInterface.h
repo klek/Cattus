@@ -29,7 +29,8 @@ namespace muggy::graphics
             void(*render)( surface_id );
         } surface;
 
-        graphics_platform platform;
+        // Initialize platform to a non-valid value
+        graphics_platform platform = (graphics_platform)-1;
     };
 }
 

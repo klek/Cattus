@@ -51,7 +51,8 @@ namespace muggy::graphics
 
     bool initialize( graphics_platform platform );
     void shutdown( void );
-
+    const char* getEngineShadersPath( void );
+    const char* getEngineShadersPath( graphics_platform platform );
     surface createSurface( platform::window window );
     void removeSurface( surface_id id );
 }

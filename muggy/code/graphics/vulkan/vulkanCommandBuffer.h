@@ -23,7 +23,7 @@ namespace muggy::graphics::vulkan
                          bool singleUse,
                          bool renderpassContinue,
                          bool simultaneousUse );
-    void endCmdBuffer( vulkan_cmd_buffer& cmdBuffer );
+    bool endCmdBuffer( vulkan_cmd_buffer& cmdBuffer );
     void updateCmdBufferSubmitted( vulkan_cmd_buffer& cmdBuffer );
     void resetCmdBuffer( vulkan_cmd_buffer& cmdBuffer );
 
