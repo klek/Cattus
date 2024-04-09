@@ -41,13 +41,27 @@ static bool closeWindow( muggy::event::windowCloseEvent& e )
     return true;
 }
 
+static bool resizeWindow( muggy::event::windowResizeEvent& e )
+{
+    assert( muggy::id::isValid( e.getId() ) );
+    // Get a reference to the surface that got resized
+    muggy::graphics::render_surface& surface = surfaces[ e.getId() ];
+
+    // Indicate to the surface that it got resized
+    surface.surface.resize( e.getWidth(), e.getHeight() );
+
+    // Return true to indicate we have dealt with the event
+    return true;
+}
+
 static void onEventCallback( muggy::event::event& e )
 {
     muggy::event::eventDispatcher dispatcher(e);
 
     dispatcher.dispatch<muggy::event::windowCloseEvent>( &closeWindow );
+    dispatcher.dispatch<muggy::event::windowResizeEvent>( &resizeWindow );
 
-    std::cout << e << std::endl;
+    //std::cout << e << std::endl;
 }
 
 static void createRenderSurface( muggy::graphics::render_surface& surface,
