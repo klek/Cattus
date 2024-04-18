@@ -13,10 +13,11 @@
 
 namespace muggy::graphics::vulkan
 {
-    vulkan_cmd_buffer allocateCmdBuffer( VkDevice device, 
-                                         VkCommandPool cmdPool,
-                                         bool primary );
-    void freeCmdBuffer( VkDevice device, 
+    bool allocateCmdBuffer( VkDevice device,
+                            VkCommandPool cmdPool,
+                            bool primary,
+                            vulkan_cmd_buffer& cmdBuffer );
+    void freeCmdBuffer( VkDevice device,
                         VkCommandPool cmdPool,
                         vulkan_cmd_buffer& cmdBuffer );
     void beginCmdBuffer( vulkan_cmd_buffer& cmdBuffer,
@@ -27,12 +28,13 @@ namespace muggy::graphics::vulkan
     void updateCmdBufferSubmitted( vulkan_cmd_buffer& cmdBuffer );
     void resetCmdBuffer( vulkan_cmd_buffer& cmdBuffer );
 
-    // vulkan_cmd_buffer allocateCmdBufferBeginSingleUse( VkDevice device,
-    //                                                    VkCommandPool cmdPool );
-    // void endCmdBufferSingleUse( VkDevice device,
-    //                             VkCommandPool cmdPool,
-    //                             vulkan_cmd_buffer& cmdBuffer,
-    //                             VkQueue queue );
+    bool allocateCmdBufferBeginSingleUse( VkDevice device,
+                                          VkCommandPool cmdPool,
+                                          vulkan_cmd_buffer& cmdBuffer );
+    void endCmdBufferSingleUse( VkDevice device,
+                                VkCommandPool cmdPool,
+                                vulkan_cmd_buffer& cmdBuffer,
+                                VkQueue queue );
 
 } // namespace muggy::graphics::vulkan
 

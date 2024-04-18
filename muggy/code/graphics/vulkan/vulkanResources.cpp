@@ -42,7 +42,7 @@ namespace muggy::graphics::vulkan
             info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
             result = vkCreateImage( initInfo->device, &info, nullptr, &image.image );
-            if ( result != VK_SUCCESS )
+            if ( VK_SUCCESS != result )
             {
                 MSG("Failed to create image...");
                 return false;
@@ -68,7 +68,7 @@ namespace muggy::graphics::vulkan
             info.memoryTypeIndex = index;
 
             result = vkAllocateMemory( initInfo->device, &info, nullptr, &image.memory );
-            if ( result != VK_SUCCESS )
+            if ( VK_SUCCESS != result )
             {
                 MSG("Failed to allocate memory for image...");
                 return false;
@@ -78,7 +78,7 @@ namespace muggy::graphics::vulkan
         // TODO(klek): Make memory offset configurable, for use in things
         //             like image pooling
         result = vkBindImageMemory( initInfo->device, image.image, image.memory, 0 );
-        if ( result != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to bind image memory...");
             return false;
@@ -165,9 +165,11 @@ namespace muggy::graphics::vulkan
         frameBuffer.renderPass = &renderPass;
         frameBuffer.attachCount = attachCount;
 
-        // 
+        // Setup framebuffer create info
         VkFramebufferCreateInfo info { };
         info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        info.pNext = nullptr;
+        info.flags = 0;
         info.renderPass = renderPass.renderPass;
         info.attachmentCount = attachCount;
         info.pAttachments = frameBuffer.attachments.data();
@@ -177,13 +179,13 @@ namespace muggy::graphics::vulkan
 
         VkResult result { VK_SUCCESS };
         result = vkCreateFramebuffer( device, &info, nullptr, &frameBuffer.frameBuffer );
-        if ( result != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to create a framebuffer...");
             return false;
         }
         
-        MSG("Create a framebuffer!");
+        MSG("Created a framebuffer!");
         return true;
     }
     

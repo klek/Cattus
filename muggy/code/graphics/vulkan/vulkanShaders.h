@@ -33,6 +33,7 @@ namespace muggy::graphics::vulkan::shaders
         {
             triangleShaderVS = 0,
             triangleShaderFS,
+            mandelBrotFS,
 
             count
         };
@@ -60,8 +61,8 @@ namespace muggy::graphics::vulkan::shaders
 
     // Create a shader module object from a compiled shader 
     bool createShaderModule( VkDevice device,
-                             VkShaderModule& shaderModule,
-                             engine_shader::id id );
+                             engine_shader::id id,
+                             VkShaderModule& shaderModule );
 
     bool initialize( void );
     void shutdown( void );

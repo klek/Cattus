@@ -51,10 +51,19 @@ namespace muggy::graphics
 
     bool initialize( graphics_platform platform );
     void shutdown( void );
+
+    // Get the location of compiled engine shaders relative to the
+    // executables path. The path is for the graphics API currently
+    // in use.
     const char* getEngineShadersPath( void );
+    // Get the location of compiled engine shaders, for the specified
+    // platform, relative to the executables path.
     const char* getEngineShadersPath( graphics_platform platform );
+
+    // High-level create/remove a surface
     surface createSurface( platform::window window );
     void removeSurface( surface_id id );
+
 }
 
 #endif

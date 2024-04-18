@@ -8,6 +8,7 @@
 
 #include "vulkanShaders.h"
 #include "../../utilities/fileUtils.h"
+// #include "shaderc/shaderc.hpp"
 
 namespace muggy::graphics::vulkan::shaders
 {
@@ -34,7 +35,8 @@ namespace muggy::graphics::vulkan::shaders
         engine_shader_info shaderInfo[]
         {
             { "triangleShader.vert", "TriangleVS", engine_shader::triangleShaderVS , shader_type::vertex },
-            { "triangleShader.frag", "TriangleFS", engine_shader::triangleShaderFS , shader_type::fragment }
+            { "triangleShader.frag", "TriangleFS", engine_shader::triangleShaderFS , shader_type::fragment },
+            { "mandelBrot.frag", "MandelBrotFS", engine_shader::mandelBrotFS , shader_type::fragment }
         };
         static_assert( _countof( shaderInfo ) == engine_shader::count );
         constexpr const char* shaderSrcFolder{ 
@@ -43,9 +45,10 @@ namespace muggy::graphics::vulkan::shaders
 
         // Get the paths for compiled shader location
         // These paths are relative to the engine-binary
-        constexpr const char* engineShaderPaths[2]{
+        constexpr const char* engineShaderPaths[]{
             "../resources/triangleVert.spv",
-            "../resources/triangleFrag.spv"
+            "../resources/triangleFrag.spv",
+            "../resources/mandelBrotFrag.spv"
         };
 
         // Each element in this array points to an offset within the 
@@ -61,13 +64,14 @@ namespace muggy::graphics::vulkan::shaders
         bool compiledShadersUpToDate( void )
         {
             // Get path to blob
-            const char* shadersBlobPath = getEngineShadersPath();
+            auto shadersBlobPath = FILE_CREATE_PATH( getEngineShadersPath() );
             // Check that the blob file exists
             if ( !FILE_EXISTS( shadersBlobPath ) )
             {
                 return false;
             }
             // Get the blob's last compile time
+
             auto shaderBlobCompileTime = FILE_GET_WRITE_TIME( shadersBlobPath );
 
             // Now we need to check this time compared to each shader-
@@ -125,13 +129,23 @@ namespace muggy::graphics::vulkan::shaders
 
         bool loadEngineShadersBlob( std::unique_ptr<uint8_t[]>& blob, uint64_t& blobSize )
         {
-            // Does the blob exists on disk? Try to read it
             auto shaderBlobPath = getEngineShadersPath();
-            bool result { utils::readShaderBlob( shaderBlobPath, blob, blobSize ) };
-            if ( result )
+            bool result { false };
+            bool overWrite { false };
+            // Are engine shaders up to date?
+            if ( compiledShadersUpToDate( ) )
             {
-                // Nice, it worked
-                return result;
+                // Does the blob exists on disk? Try to read it
+                result = utils::readShaderBlob( shaderBlobPath, blob, blobSize );
+                if ( result )
+                {
+                    // Nice, it worked
+                    return result;
+                }
+            }
+            else
+            {
+                overWrite = true;
             }
 
             // Well, the blob did not exist, try to create it from compiled
@@ -148,12 +162,13 @@ namespace muggy::graphics::vulkan::shaders
                     break;
                 }
                 // Now we write this data to the shaderBlob
-                result = utils::writeShaderToBlob( shaderBlobPath, shaderData.get(), size );
+                result = utils::writeShaderToBlob( shaderBlobPath, shaderData.get(), size, overWrite );
                 if ( !result )
                 {
                     // If we cannot write the shader to file, should we give up?
                     break;
                 }
+                overWrite = false;
             }
 
             if ( !result )
@@ -212,7 +227,7 @@ namespace muggy::graphics::vulkan::shaders
     bool compileShaders(  )
     {
         // Are compiled shaders up to date?
-        // Is the compiled shaders newer than shader source?
+        // Are the compiled shaders newer than shader source?
         if ( compiledShadersUpToDate() )
         {
             return true;
@@ -220,6 +235,13 @@ namespace muggy::graphics::vulkan::shaders
 
         // Create a buffer to hold shaders
         utils::vector<vulkan_shader_struct> shaders;
+
+        // Setup shaderc compiler
+        // shaderc::CompileOptions options;
+        // shaderc::Compiler compiler;
+
+        // Compiler options
+        // options.SetIncluder(shaderSrcFolder);
 
         // Compile shaders and add them to the buffer in the same order
         // they are compiled
@@ -233,8 +255,8 @@ namespace muggy::graphics::vulkan::shaders
     }
 
     bool createShaderModule( VkDevice device,
-                             VkShaderModule& shaderModule,
-                             engine_shader::id id )
+                             engine_shader::id id,
+                             VkShaderModule& shaderModule )
     {
         assert( id < engine_shader::count );
         // Get the requested shader from engineShaders
@@ -243,6 +265,8 @@ namespace muggy::graphics::vulkan::shaders
         //utils::vector<uint8_t> data ( shader->size );
         utils::vector<uint8_t> data;
         // Copy shader code into our vector
+        // TODO(klek): Find a better (and likely more efficient) way
+        //             of doing this copy...
         for ( uint64_t i { 0 }; i < shader->size; i++ )
         {
             //data[ i ] = shader->byteCode[ i ];
@@ -253,10 +277,14 @@ namespace muggy::graphics::vulkan::shaders
         // Create the info struct
         VkShaderModuleCreateInfo createInfo { };
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
         createInfo.codeSize = data.size();
         createInfo.pCode = reinterpret_cast<const uint32_t*>( data.data() );
 
-        if ( vkCreateShaderModule( device, &createInfo, nullptr, &shaderModule ) != VK_SUCCESS )
+        VkResult result { VK_SUCCESS };
+        result = vkCreateShaderModule( device, &createInfo, nullptr, &shaderModule );
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to create shader module...");
             return false;

@@ -10,38 +10,39 @@
 
 namespace muggy::graphics::vulkan
 {
-    vulkan_cmd_buffer allocateCmdBuffer( VkDevice device, 
-                                         VkCommandPool cmdPool,
-                                         bool primary )
+    bool allocateCmdBuffer( VkDevice device,
+                            VkCommandPool cmdPool,
+                            bool primary,
+                            vulkan_cmd_buffer& cmdBuffer )
     {
-        vulkan_cmd_buffer cmdBuffer{ };
+        //vulkan_cmd_buffer cmdBuffer{ };
+        VkResult result { VK_SUCCESS };
 
         VkCommandBufferAllocateInfo info { };
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        info.pNext = nullptr;
         info.commandPool = cmdPool;
         // NOTE(klek): Secondary buffers must be used together with another
         //             buffer (primary), not on its own
         // TODO(klek): Can we check for this?
         info.level = ( primary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY );
         info.commandBufferCount = 1;
-        info.pNext = nullptr;
 
         cmdBuffer.cmdState = vulkan_cmd_buffer::CMD_NOT_ALLOCATED;
-        VkResult result { VK_SUCCESS };
         result = vkAllocateCommandBuffers( device, &info, &cmdBuffer.cmdBuffer );
-        if ( result != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to allocate command buffer...")
             // NOTE(klek): Should we free cmdBuffer.cmdBuffer here?
             //             To make sure it is nullptr?
-            return cmdBuffer;
+            return false;
         }
 
         cmdBuffer.cmdState = vulkan_cmd_buffer::CMD_READY;
 
         MSG("Command buffer allocated!");
 
-        return cmdBuffer;
+        return true;
     }
 
     void freeCmdBuffer( VkDevice device, 
@@ -62,6 +63,7 @@ namespace muggy::graphics::vulkan
     {
         VkCommandBufferBeginInfo info { };
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.pNext = nullptr;
         info.flags = 0;
 
         // NOTE(klek): Single use cannot be used more than once, and
@@ -86,13 +88,19 @@ namespace muggy::graphics::vulkan
             info.flags |= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         }
 
+        // Setting inheritance to null
+        info.pInheritanceInfo = nullptr;
+
         VkResult result { VK_SUCCESS };
         result = vkBeginCommandBuffer( cmdBuffer.cmdBuffer, &info );
-        if ( result != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to begin command buffer...");
-            assert( result != VK_SUCCESS );
+            // TODO(klek): How to handle this error?
+            assert( VK_SUCCESS != result );
         }
+
+        // Set internal variable to recording
         cmdBuffer.cmdState = vulkan_cmd_buffer::CMD_RECORDING;
     }
 
@@ -103,7 +111,7 @@ namespace muggy::graphics::vulkan
         VkResult result { VK_SUCCESS };
         // TODO(klek): Check to make sure the buffer can be ended before ending
         result = vkEndCommandBuffer( cmdBuffer.cmdBuffer );
-        if ( result != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to end command buffer...");
             return false;
@@ -128,14 +136,18 @@ namespace muggy::graphics::vulkan
     }
 
     // Function to allocate a single use, primary command buffer
-    vulkan_cmd_buffer allocateCmdBufferBeginSingleUse( VkDevice device,
-                                                       VkCommandPool cmdPool )
+    bool allocateCmdBufferBeginSingleUse( VkDevice device,
+                                          VkCommandPool cmdPool,
+                                          vulkan_cmd_buffer& cmdBuffer )
     {
-        vulkan_cmd_buffer cmdBuffer { };
-        cmdBuffer = allocateCmdBuffer( device, cmdPool, true );
+        //vulkan_cmd_buffer cmdBuffer { };
+        if ( !allocateCmdBuffer( device, cmdPool, true, cmdBuffer ) )
+        {
+            return false;
+        }
         beginCmdBuffer( cmdBuffer, true, false, false );
 
-        return cmdBuffer;
+        return true;
     }
 
     // Function to end and submit a single use command buffer
@@ -155,10 +167,10 @@ namespace muggy::graphics::vulkan
         // Submit the command buffer to the given queue
         VkResult result { VK_SUCCESS };
         result = vkQueueSubmit( queue, 1, &info, nullptr );
-        if ( result != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to submit single use command buffer to queue...");
-            assert( result != VK_SUCCESS );
+            assert( VK_SUCCESS != result );
         }
 
         // Wait for the queue to finish
@@ -166,7 +178,7 @@ namespace muggy::graphics::vulkan
         if ( result != VK_SUCCESS )
         {
             MSG("vkQueueWaitIdle failed in endCmdBufferSignleUse...")
-            assert( result != VK_SUCCESS );
+            assert( VK_SUCCESS != result );
         }
 
         // Free the single use command buffer

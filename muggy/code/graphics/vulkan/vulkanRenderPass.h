@@ -13,13 +13,14 @@
 
 namespace muggy::graphics::vulkan::renderpass
 {
-    vulkan_renderpass createRenderPass( VkDevice device,
-                                        VkFormat swapchainFormat,
-                                        VkFormat depthFormat,
-                                        math::u32v4d renderArea,
-                                        math::fv4d clearColor,
-                                        float depth,
-                                        uint32_t stencil );
+    bool createRenderPass( VkDevice device,
+                           VkFormat swapchainFormat,
+                           VkFormat depthFormat,
+                           math::u32v4d renderArea,
+                           math::fv4d clearColor,
+                           float depth,
+                           uint32_t stencil,
+                           vulkan_renderpass& renderPass );
     void destroyRenderPass( VkDevice device, vulkan_renderpass& renderPass );
     void beginRenderPass( VkCommandBuffer cmdBuffer, 
                           vulkan_cmd_buffer::state& state,
