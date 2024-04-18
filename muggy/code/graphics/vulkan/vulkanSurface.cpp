@@ -42,7 +42,7 @@ namespace muggy::graphics::vulkan
 
         VkPresentModeKHR chooseBestPresentationMode( const utils::vector<VkPresentModeKHR> modes )
         {
-            // NOTE(klek): VK_PRESENT_MODE_MAILBOX_KHR is preffered, as
+            // NOTE(klek): VK_PRESENT_MODE_MAILBOX_KHR is preferred, as
             //             it always uses the next newest image available,
             //             and gets rid of any that are older.
             //             This results in optimal response time, with no
@@ -89,10 +89,28 @@ namespace muggy::graphics::vulkan
             }
         }
 
-        VkImageView createImageView( VkImage image, VkFormat format, VkImageAspectFlags flags )
+        VkImageUsageFlags getImageUsageFlags( const VkSurfaceCapabilitiesKHR& capabilities )
+        {
+            // Color attachment flag must always be supported
+            // Check for transfer destination bit to also support image
+            // clear operations
+            if ( capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT )
+            {
+                return VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+            }
+            MSG("VK_IMAGE_USAGE_TRANSFER_DST image usage is not supported bu the swap chain...");
+            // Transfer destination not available
+            return VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM;
+        }
+
+        bool createImageView( VkImage image, VkFormat format,
+                                     VkImageAspectFlags aspectFlags,
+                                     VkImageView& imageView )
         {
             VkImageViewCreateInfo info { };
             info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            info.pNext = nullptr;
+            info.flags = 0;
             info.image = image;
             info.viewType = VK_IMAGE_VIEW_TYPE_2D;
             info.format = format;
@@ -103,7 +121,7 @@ namespace muggy::graphics::vulkan
             // NOTE(klek): Subresources allow the view to view only part 
             //             of the image
             // Which part of image to view
-            info.subresourceRange.aspectMask = flags;
+            info.subresourceRange.aspectMask = aspectFlags;
             // Start mipmap level to view from
             info.subresourceRange.baseMipLevel = 0;
             // Number of mipmap levels to view
@@ -113,33 +131,70 @@ namespace muggy::graphics::vulkan
             // Number of array levels to view
             info.subresourceRange.layerCount = 1;
 
-            VkImageView imageView { };
             VkResult result { VK_SUCCESS };
             result = vkCreateImageView( core::getLogicalDevice(), & info, nullptr, &imageView );
-            if ( result != VK_SUCCESS )
+            if ( VK_SUCCESS != result )
             {
                 MSG("Failed to create image view...");
+                return false;
             }
 
-            return imageView;
+            return true;
         }
 
     } // namespace anonymous
     
     void vulkan_surface::create( VkInstance instance )
     {
-        createSurface( instance );
-        // TODO(klek): Add check to the device creation
-        core::createDevice( m_Surface );
-        // TODO(klek): Add check to the swapchain creation
-        createSwapchain( );
-        createRenderpass( );
-        // TODO(klek): Add the creation of the graphics pipeline
-        pipeline::createGraphicsPipeline( core::getLogicalDevice(), m_Renderpass.renderPass );
-        // TODO(klek): Add check to the framebuffer creation
-        reCreateFramebuffers( );
-        // TODO(klek): Add check to the graphics command creation
-        core::createGraphicsCommand( (uint32_t)m_Swapchain.images.size() );
+        // Creating a vulkan surface happens before creating a device
+        // because a vulkan device needs information from the surface
+        // creation
+        bool result { true };
+        // TODO(klek): Add proper error handling
+        result = createSurface( instance );
+        assert( result );
+        // TODO(klek): Add proper error handling
+        result = core::createDevice( m_Surface );
+        assert( result );
+        // TODO(klek): Add proper error handling
+        result = createSwapchain( );
+        assert( result );
+        // TODO(klek): Add proper error handling
+        result = createRenderpass( );
+        assert( result );
+        // TODO(klek): Add proper error handling
+        result = pipeline::createGraphicsPipeline( core::getLogicalDevice(),
+                                                  m_Renderpass.renderPass,
+                                                  m_GraphicsPipeline,
+                                                  m_PipelineLayout );
+        assert ( result );
+        // TODO(klek): Add proper error handling
+        result = reCreateFramebuffers( );
+        assert( result );
+        // TODO(klek): Add proper error handling
+        result = core::createGraphicsCommand( (uint32_t)m_Swapchain.images.size() );
+        assert( result );
+    }
+
+    void vulkan_surface::release( void )
+    {
+        vkDeviceWaitIdle( core::getLogicalDevice() );
+        for ( uint32_t i {0 }; i < m_Swapchain.images.size(); i++ )
+        {
+            destroyFrameBuffer( core::getLogicalDevice(), m_FrameBuffers[ i ] );
+        }
+        cleanSwapchain();
+
+        //pipeline::shutdown( core::getLogicalDevice() );
+        pipeline::destroyGraphicsPipeline( core::getLogicalDevice(),
+                                           m_GraphicsPipeline,
+                                           m_PipelineLayout );
+        renderpass::destroyRenderPass( core::getLogicalDevice(), m_Renderpass );
+
+        // NOTE(klek): Destruction of device happens when we shutdown
+        //             the api in core::shutdown()!
+        // Destroy this surface
+        vkDestroySurfaceKHR( core::getInstance(), m_Surface, nullptr );
     }
 
     void vulkan_surface::present( VkSemaphore imageAvailable, 
@@ -228,7 +283,7 @@ namespace muggy::graphics::vulkan
 
     // This function contains platform specific code due to that
     // surfaces are created based on the window system in use
-    void vulkan_surface::createSurface( VkInstance instance )
+    bool vulkan_surface::createSurface( VkInstance instance )
     {
 #if ( defined( GLFW ) || defined( GLFW3 ) )
         // NOTE(klek): GLFW has implementation for this for all 
@@ -239,7 +294,7 @@ namespace muggy::graphics::vulkan
                                           (GLFWwindow*)m_Window.handle(), 
                                           nullptr, 
                                           &m_Surface );
-        if ( result != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("GLFW failed to create surface...");
 
@@ -252,13 +307,14 @@ namespace muggy::graphics::vulkan
                 createInfo.hwnd = glfwGetWin32Window( (GLFWwindow*)m_Window.handle() );
                 createInfo.hinstance = GetModuleHandle( nullptr );
 
-                VkResult res = vkCreateWin32SurfaceKHR( instance,
-                                                        &createInfo,
-                                                        nullptr,
-                                                        &m_Surface );
-                if ( res != VK_SUCCESS )
+                result = vkCreateWin32SurfaceKHR( instance,
+                                                  &createInfo,
+                                                  nullptr,
+                                                  &m_Surface );
+                if ( VK_SUCCESS != result )
                 {
                     MSG("Failed to manually create a surface...");
+                    return false;
                 }
             }
             #elif defined( __linux__ )
@@ -269,13 +325,14 @@ namespace muggy::graphics::vulkan
                 //createInfo.window = *(Window*)m_Window.handle();
                 createInfo.window = glfwGetX11Window( (GLFWwindow*)m_Window.handle() );
 
-                VkResult res = vkCreateXlibSurfaceKHR( instance,
-                                                       &createInfo,
-                                                       nullptr,
-                                                       &m_Surface );
-                if ( res != VK_SUCCESS )
+                result = vkCreateXlibSurfaceKHR( instance,
+                                                 &createInfo,
+                                                 nullptr,
+                                                 &m_Surface );
+                if ( VK_SUCCESS != result )
                 {
                     MSG("Failed to manually create a surface...");
+                    return false;
                 }
             }
             #endif
@@ -290,9 +347,10 @@ namespace muggy::graphics::vulkan
                                           &createInfo,
                                           nullptr,
                                           &surface );
-        if ( res != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to create a surface...");
+            return false;
         }
 #elif defined( __linux__ )
         VkXlibSurfaceCreateInfoKHR createInfo { };
@@ -304,29 +362,33 @@ namespace muggy::graphics::vulkan
                                          &createInfo,
                                          nullptr,
                                          &surface );
-        if ( res != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to create a surface...");
+            return false;
         }
 #endif
+        return true;
     }
 
-    void vulkan_surface::createRenderpass( void )
+    bool vulkan_surface::createRenderpass( void )
     {
-        m_Renderpass = renderpass::createRenderPass( core::getLogicalDevice(),
-                                                     m_Swapchain.imageFormat,
-                                                     core::getDepthFormat(),
-                                                     { 0, 0, m_Window.getWidth(), m_Window.getHeight() },
-                                                     { 0.0f, 0.0f, 0.0f, 0.0f },
-                                                     1.0f,
-                                                     0 );
+         return renderpass::createRenderPass( core::getLogicalDevice(),
+                                              m_Swapchain.imageFormat,
+                                              core::getDepthFormat(),
+                                              { 0, 0, m_Window.getWidth(), m_Window.getHeight() },
+                                              { 0.0f, 0.0f, 0.0f, 0.0f },
+                                              1.0f,
+                                              0,
+                                              m_Renderpass );
     }
 
     bool vulkan_surface::createSwapchain( void )
     {
         // We pick the best settings for the swapchain based on the
         // swapchain details from the physical device
-        m_Swapchain.details = getSwapchainDetails( core::getPhysicalDevice(), m_Surface );
+        bool res = getSwapchainDetails( core::getPhysicalDevice(), m_Surface, m_Swapchain.details );
+        assert( res );
 
         // Find optimal surface values for the swapchain
         VkSurfaceFormatKHR format { chooseBestSurfaceFormat( m_Swapchain.details.formats ) };
@@ -334,6 +396,13 @@ namespace muggy::graphics::vulkan
         VkExtent2D extent { chooseBestSwapExtent( m_Swapchain.details.surfaceCapabilities, 
                                                   m_Window.getWidth(), 
                                                   m_Window.getHeight() ) };
+        VkImageUsageFlags usageFlags { getImageUsageFlags( m_Swapchain.details.surfaceCapabilities ) };
+
+        // Check that the desired image usage flags is valid
+        if ( VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM == usageFlags )
+        {
+            return false;
+        }
 
         uint32_t imagesInFlight = m_Swapchain.details.surfaceCapabilities.minImageCount + 1;
         // NOTE(klek): At this point, in a typical situation, imagesInFlight 
@@ -352,25 +421,17 @@ namespace muggy::graphics::vulkan
         // Create the swapchain info
         VkSwapchainCreateInfoKHR info { };
         info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        info.pNext = nullptr;
+        info.flags = 0;
         info.surface = m_Surface;
+        info.minImageCount = imagesInFlight;
         info.imageFormat = format.format;
         info.imageColorSpace = format.colorSpace;
-        info.presentMode = mode;
         info.imageExtent = extent;
-        info.minImageCount = imagesInFlight;
         // Number of layers for each image in swapchain
         info.imageArrayLayers = 1;
         // What attachment each image will be used as
-        info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        // Transform to perform on swapchain images
-        info.preTransform = m_Swapchain.details.surfaceCapabilities.currentTransform;
-        // How to handle blending images with external graphics (such as 
-        // other windos, OS UIs etc)
-        info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        // Clip parts of images not in view? (ie offscreen, behind 
-        // another window etc)
-        info.clipped = VK_TRUE;
-
+        info.imageUsage = usageFlags;
         // If graphics and presentation queue family indices are different, 
         // the swapchain must let images be shared between families
         if ( core::getGraphicsFamilyQueueIndex() != core::getPresentationFamilyQueueIndex() )
@@ -390,6 +451,15 @@ namespace muggy::graphics::vulkan
             info.queueFamilyIndexCount = 0;
             info.pQueueFamilyIndices = nullptr;
         }
+        // Transform to perform on swapchain images
+        info.preTransform = m_Swapchain.details.surfaceCapabilities.currentTransform;
+        // How to handle blending images with external graphics (such as
+        // other windows, OS UIs etc)
+        info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        info.presentMode = mode;
+        // Clip parts of images not in view? (ie offscreen, behind
+        // another window etc)
+        info.clipped = VK_TRUE;
 
         // NOTE(klek): If old swapchain has been destroyed and this one
         //             is replacing it, you can use this to link the old
@@ -402,31 +472,31 @@ namespace muggy::graphics::vulkan
         // TODO(klek): Extend this when using compute and transfer
         //             queues
         VkBool32 supported { false };
-        vkGetPhysicalDeviceSurfaceSupportKHR( core::getPhysicalDevice(), 
-                                              core::getGraphicsFamilyQueueIndex(), 
-                                              m_Surface, 
-                                              &supported );
-        if ( supported == VK_FALSE )
+        VkResult result { VK_SUCCESS };
+        result = vkGetPhysicalDeviceSurfaceSupportKHR( core::getPhysicalDevice(),
+                                                       core::getGraphicsFamilyQueueIndex(),
+                                                       m_Surface,
+                                                       &supported );
+        if ( ( VK_SUCCESS != result ) || ( VK_FALSE == supported ) )
         {
             MSG("Physical device does not support graphics family queue for this surface...");
             return false;
         }
-        vkGetPhysicalDeviceSurfaceSupportKHR( core::getPhysicalDevice(), 
-                                              core::getPresentationFamilyQueueIndex(), 
-                                              m_Surface, 
-                                              &supported );
-        if ( supported == VK_FALSE )
+        result = vkGetPhysicalDeviceSurfaceSupportKHR( core::getPhysicalDevice(),
+                                                       core::getPresentationFamilyQueueIndex(),
+                                                       m_Surface,
+                                                       &supported );
+        if ( ( VK_SUCCESS != result ) || ( VK_FALSE == supported ) )
         {
             MSG("Physical device does not support presentation family queue for this surface...");
             return false;
         }
 
-        VkResult result { VK_SUCCESS };
         result = vkCreateSwapchainKHR( core::getLogicalDevice(), 
                                        &info, 
                                        nullptr, 
                                        &m_Swapchain.swapchain );
-        if ( result != VK_SUCCESS )
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to create swapchain...");
             return false;
@@ -437,23 +507,37 @@ namespace muggy::graphics::vulkan
 
         // Get swapchain images and image views
         uint32_t imageCount { 0 };
-        vkGetSwapchainImagesKHR( core::getLogicalDevice(), 
-                                 m_Swapchain.swapchain, 
-                                 &imageCount, 
-                                 nullptr );
+        result = vkGetSwapchainImagesKHR( core::getLogicalDevice(),
+                                          m_Swapchain.swapchain,
+                                          &imageCount,
+                                          nullptr );
+        if ( ( VK_SUCCESS != result ) || ( imageCount == 0 ) )
+        {
+            MSG("Failed to get the number of swap chain images...");
+            return false;
+        }
         utils::vector<VkImage> images( imageCount );
-        vkGetSwapchainImagesKHR( core::getLogicalDevice(), 
-                                 m_Swapchain.swapchain, 
-                                 &imageCount, 
-                                 images.data() );
+        result = vkGetSwapchainImagesKHR( core::getLogicalDevice(),
+                                          m_Swapchain.swapchain,
+                                          &imageCount,
+                                          images.data() );
+        if ( VK_SUCCESS != result )
+        {
+            MSG("Failed to get swap chain images...");
+            return false;
+        }
 
         for ( const auto& image : images )
         {
             swapchain_image temp { };
             temp.image = image;
-            temp.imageView = createImageView( image, 
-                                              m_Swapchain.imageFormat, 
-                                              VK_IMAGE_ASPECT_COLOR_BIT );
+            if ( !createImageView( image,
+                                   m_Swapchain.imageFormat,
+                                   VK_IMAGE_ASPECT_COLOR_BIT,
+                                   temp.imageView ) )
+            {
+                // TODO(klek): Handle error here!!
+            }
             m_Swapchain.images.push_back( temp );
         }
 
@@ -486,6 +570,12 @@ namespace muggy::graphics::vulkan
         return true;
     }
 
+    // NOTE(klek): Currently we are creating a framebuffer for each
+    //             image view in the swap chain
+    //             Perhaps, this isn't what we want to do at a later
+    //             date (due to performance in the render loop), but
+    //             currently this simplifies the code for the
+    //             render loop
     bool vulkan_surface::reCreateFramebuffers( void )
     {
         // Why are we resizing before we destroy the current?
@@ -508,6 +598,9 @@ namespace muggy::graphics::vulkan
 
         for ( uint32_t i { 0 }; i < m_Swapchain.images.size(); i++ )
         {
+            // NOTE(klek): The attachment count here must match the
+            //             attachment count in renderpass
+            // TODO(klek): Investigate if we can sync these attachments
             uint32_t attachCount = 2;
             utils::vector<VkImageView> attachments { };
             attachments.resize( attachCount );
@@ -546,63 +639,70 @@ namespace muggy::graphics::vulkan
         vkDestroySwapchainKHR( core::getLogicalDevice(), m_Swapchain.swapchain, nullptr );
     }
 
-    void vulkan_surface::release( void )
+    bool getSwapchainDetails( VkPhysicalDevice device,
+                              VkSurfaceKHR surface,
+                              swapchain_details& details )
     {
-        vkDeviceWaitIdle( core::getLogicalDevice() );
-        for ( uint32_t i {0 }; i < m_Swapchain.images.size(); i++ )
-        {
-            destroyFrameBuffer( core::getLogicalDevice(), m_FrameBuffers[ i ] );
-        }
-        cleanSwapchain();
-
-        pipeline::shutdown( core::getLogicalDevice() );
-        renderpass::destroyRenderPass( core::getLogicalDevice(), m_Renderpass );
-        vkDestroySurfaceKHR( core::getInstance(), m_Surface, nullptr );
-    }
-
-    swapchain_details getSwapchainDetails( VkPhysicalDevice device, 
-                                           VkSurfaceKHR surface )
-    {
-        swapchain_details details { };
+        //swapchain_details details { };
+        VkResult result { VK_SUCCESS };
 
         // Capabilities
         // Get the surface capabilities for the given surface on 
         // the given physical device
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR( device, 
-                                                   surface, 
-                                                   &details.surfaceCapabilities );
-        
+        result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR( device,
+                                                            surface,
+                                                            &details.surfaceCapabilities );
+        if ( VK_SUCCESS != result )
+        {
+            MSG("Failed to get surface capabilities...");
+            return false;
+        }
+
         // Get the supported formats
         uint32_t formatCount { 0 };
-        vkGetPhysicalDeviceSurfaceFormatsKHR( device, 
-                                              surface, 
-                                              &formatCount, 
-                                              nullptr );
-        if ( formatCount > 0 )
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR( device,
+                                                       surface,
+                                                       &formatCount,
+                                                       nullptr );
+        if ( VK_SUCCESS != result || formatCount == 0 )
         {
-            details.formats.resize( formatCount );
-            vkGetPhysicalDeviceSurfaceFormatsKHR( device, 
-                                                  surface, 
-                                                  &formatCount, 
-                                                  details.formats.data() );
+            MSG("Failed to get surface formats...");
+            return false;
+        }
+        details.formats.resize( formatCount );
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR( device,
+                                                       surface,
+                                                       &formatCount,
+                                                       details.formats.data() );
+        if ( VK_SUCCESS != result )
+        {
+            MSG("Failed to get surface formats...");
+            return false;
         }
 
         // Get the supported presentation modes
         uint32_t presModeCount { 0 };
-        vkGetPhysicalDeviceSurfacePresentModesKHR( device, 
-                                                   surface,
-                                                   &presModeCount,
-                                                   nullptr );
-        if ( presModeCount > 0 )
+        result = vkGetPhysicalDeviceSurfacePresentModesKHR( device,
+                                                            surface,
+                                                            &presModeCount,
+                                                            nullptr );
+        if ( VK_SUCCESS != result || presModeCount == 0 )
         {
-            details.presentationModes.resize( presModeCount );
-            vkGetPhysicalDeviceSurfacePresentModesKHR( device, 
-                                                       surface,
-                                                       &presModeCount,
-                                                       details.presentationModes.data() );
+            MSG("Failed to get surface presentation modes...");
+            return false;
+        }
+        details.presentationModes.resize( presModeCount );
+        result = vkGetPhysicalDeviceSurfacePresentModesKHR( device,
+                                                            surface,
+                                                            &presModeCount,
+                                                            details.presentationModes.data() );
+        if ( VK_SUCCESS != result )
+        {
+            MSG("Failed to get surface presentation modes...");
+            return false;
         }
 
-        return details;
+        return true;
     }
 
 } // namespace muggy::graphics::vulkan

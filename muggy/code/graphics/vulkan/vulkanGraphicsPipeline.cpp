@@ -8,89 +8,147 @@
 
 #include "vulkanGraphicsPipeline.h"
 #include "vulkanShaders.h"
+#include "vulkanVertex.h"
 
 namespace muggy::graphics::vulkan::pipeline
 {
     namespace 
     {
         // TODO(klek): these should likely be part of a class
-        VkPipelineLayout pipelineLayout;
-        VkPipeline       graphicsPipeline;
+        //VkPipelineLayout pipelineLayout;
+        //VkPipeline       graphicsPipeline;
+
+        VkPipelineShaderStageCreateInfo
+        getShaderCreateInfo( VkShaderStageFlagBits stage,
+                             VkShaderModule module,
+                             const char* name )
+        {
+            VkPipelineShaderStageCreateInfo shaderStageInfo { };
+            shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            shaderStageInfo.pNext = nullptr;
+            shaderStageInfo.flags = 0;
+            shaderStageInfo.stage = stage;
+            shaderStageInfo.module = module;
+            shaderStageInfo.pName = name;
+            shaderStageInfo.pSpecializationInfo = nullptr;
+
+            return shaderStageInfo;
+        }
     } // namespace anonymous
     
-    bool createGraphicsPipeline( VkDevice device, VkRenderPass renderPass )
+    bool createGraphicsPipeline( VkDevice device, VkRenderPass renderPass,
+                                 VkPipeline& graphicsPipeline,
+                                 VkPipelineLayout& pipelineLayout )
     {
+        // Only 1 pipeline and pipelinelayout
+        if ( graphicsPipeline && pipelineLayout )
+        {
+            return true;
+        }
         VkShaderModule vertShaderModule { };
         VkShaderModule fragShaderModule { };
-        // TODO(klek): THIS NEEDS TO BE FIXED
 
-        shaders::createShaderModule( device, vertShaderModule, shaders::engine_shader::triangleShaderVS);
-        shaders::createShaderModule( device, fragShaderModule, shaders::engine_shader::triangleShaderFS);
+        // TODO(klek): Add error handling to shader module creation
+        shaders::createShaderModule( device, shaders::engine_shader::triangleShaderVS, vertShaderModule );
+        shaders::createShaderModule( device, shaders::engine_shader::triangleShaderFS, fragShaderModule );
 
         // Setting up shaderstages
-        VkPipelineShaderStageCreateInfo vertShaderStageInfo { };
-        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = vertShaderModule;
-        vertShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo fragShaderStageInfo { };
-        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = fragShaderModule;
-        fragShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo shaderStages[ ] = 
-        { 
-            vertShaderStageInfo, 
-            fragShaderStageInfo 
+        VkPipelineShaderStageCreateInfo vShaderStageInfo {
+            getShaderCreateInfo( VK_SHADER_STAGE_VERTEX_BIT,
+                                 vertShaderModule,
+                                 "main" )
         };
 
+        VkPipelineShaderStageCreateInfo fShaderStageInfo {
+            getShaderCreateInfo( VK_SHADER_STAGE_FRAGMENT_BIT,
+                                 fragShaderModule,
+                                 "main" )
+        };
+
+        utils::vector<VkPipelineShaderStageCreateInfo> shaderStages {};
+        shaderStages.push_back( vShaderStageInfo );
+        shaderStages.push_back( fShaderStageInfo );
+
+        auto bindingDescription = vertex::vulkan_vertex::getBindingDescription();
+        auto attributeDescription = vertex::vulkan_vertex::getAttributeDescription();
         // Setting up vertex input
         VkPipelineVertexInputStateCreateInfo vertexInputInfo { };
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
+        vertexInputInfo.pNext = nullptr;
+        vertexInputInfo.flags = 0;
+        // vertexInputInfo.vertexBindingDescriptionCount = 0;
+        // vertexInputInfo.vertexAttributeDescriptionCount = 0;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>( attributeDescription.size() );
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.data();
 
         // Setting up assembly input
         VkPipelineInputAssemblyStateCreateInfo inputAssembly { };
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        inputAssembly.pNext = nullptr;
+        inputAssembly.flags = 0;
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         // Setting up viewport stage
         VkPipelineViewportStateCreateInfo viewportState { };
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewportState.pNext = nullptr;
+        viewportState.flags = 0;
         viewportState.viewportCount = 1;
+        // NOTE(klek): Using dynamic states for viewports
+        viewportState.pViewports = nullptr;
         viewportState.scissorCount = 1;
+        // NOTE(klek): Using dynamic states for scissors
+        viewportState.pScissors = nullptr;
 
         // Setting up rasterizer
         VkPipelineRasterizationStateCreateInfo rasterizer { };
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        rasterizer.pNext = nullptr;
+        rasterizer.flags = 0;
         rasterizer.depthClampEnable = VK_FALSE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-        rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
+        rasterizer.depthBiasConstantFactor = 0.0f;
+        rasterizer.depthBiasClamp = 0.0f;
+        rasterizer.depthBiasSlopeFactor = 0.0f;
+        rasterizer.lineWidth = 1.0f;
 
         // Setting up multisampling
         VkPipelineMultisampleStateCreateInfo multiSampling { };
         multiSampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multiSampling.sampleShadingEnable = VK_FALSE;
+        multiSampling.pNext = nullptr;
+        multiSampling.flags = 0;
         multiSampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        multiSampling.sampleShadingEnable = VK_FALSE;
+        multiSampling.minSampleShading = 1.0f;
+        multiSampling.pSampleMask = nullptr;
+        multiSampling.alphaToCoverageEnable = VK_FALSE;
+        multiSampling.alphaToOneEnable = VK_FALSE;
 
         // Setting up colorblend
         VkPipelineColorBlendAttachmentState colorBlendAttachment { };
+        colorBlendAttachment.blendEnable = VK_FALSE;
+        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
         colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | 
                                               VK_COLOR_COMPONENT_G_BIT | 
                                               VK_COLOR_COMPONENT_B_BIT | 
                                               VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachment.blendEnable = VK_FALSE;
 
         VkPipelineColorBlendStateCreateInfo colorBlending { };
         colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        colorBlending.pNext = nullptr;
+        colorBlending.flags = 0;
         colorBlending.logicOpEnable = VK_FALSE;
         colorBlending.logicOp = VK_LOGIC_OP_COPY;
         colorBlending.attachmentCount = 1;
@@ -107,20 +165,28 @@ namespace muggy::graphics::vulkan::pipeline
         
         VkPipelineDynamicStateCreateInfo dynamicState { };
         dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamicState.pNext = nullptr;
+        dynamicState.flags = 0;
         dynamicState.dynamicStateCount = static_cast<uint32_t>( dynamicStates.size() );
         dynamicState.pDynamicStates = dynamicStates.data();
 
         // Setting up pipeline layout
         VkPipelineLayoutCreateInfo layoutInfo { };
         layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        layoutInfo.pNext = nullptr;
+        layoutInfo.flags = 0;
         layoutInfo.setLayoutCount = 0;
+        layoutInfo.pSetLayouts = nullptr;
         layoutInfo.pushConstantRangeCount = 0;
+        layoutInfo.pPushConstantRanges = nullptr;
 
         // Create the pipeline layout
-        if ( VK_SUCCESS != vkCreatePipelineLayout( device, 
-                                                   &layoutInfo,
-                                                   nullptr,
-                                                   &pipelineLayout ) )
+        VkResult result { VK_SUCCESS };
+        result = vkCreatePipelineLayout( device,
+                                         &layoutInfo,
+                                         nullptr,
+                                         &pipelineLayout );
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to create pipeline layout...");
             return false;
@@ -129,10 +195,13 @@ namespace muggy::graphics::vulkan::pipeline
         // Create the pipeline
         VkGraphicsPipelineCreateInfo pipelineInfo { };
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
-        pipelineInfo.pStages = shaderStages;
+        pipelineInfo.pNext = nullptr;
+        pipelineInfo.flags = 0;
+        pipelineInfo.stageCount = static_cast<uint32_t>( shaderStages.size() );
+        pipelineInfo.pStages = shaderStages.data();
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pTessellationState = nullptr;
         pipelineInfo.pViewportState = &viewportState;
         pipelineInfo.pRasterizationState = &rasterizer;
         pipelineInfo.pMultisampleState = &multiSampling;
@@ -145,17 +214,23 @@ namespace muggy::graphics::vulkan::pipeline
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
 
-        if ( VK_SUCCESS != vkCreateGraphicsPipelines( device,
-                                                      VK_NULL_HANDLE,
-                                                      1,
-                                                      &pipelineInfo,
-                                                      nullptr,
-                                                      &graphicsPipeline ) )
+        result = vkCreateGraphicsPipelines( device,
+                                            VK_NULL_HANDLE,
+                                            1,
+                                            &pipelineInfo,
+                                            nullptr,
+                                            &graphicsPipeline );
+        if ( VK_SUCCESS != result )
         {
             MSG("Failed to create graphics pipeline...");
             return false;
         }
 
+        // NOTE(klek): Destroying shader modules here since they are
+        //             no longer needed.
+        // TODO(klek): Consider adding smart-pointer functionality to
+        //             these shader modules, such that they are
+        //             automatically destroyed when they go out of scope
         vkDestroyShaderModule( device, vertShaderModule, nullptr);
         vkDestroyShaderModule( device, fragShaderModule, nullptr);
 
@@ -164,17 +239,25 @@ namespace muggy::graphics::vulkan::pipeline
         return true;
     }
 
-    VkPipeline& getGraphicsPipeline( void )
-    {
-        return graphicsPipeline;
-    }
+    // VkPipeline& getGraphicsPipeline( void )
+    // {
+    //     return graphicsPipeline;
+    // }
 
-    bool initialize( void )
-    {
-        return false;
-    }
+    // bool initialize( void )
+    // {
+    //     return false;
+    // }
 
-    void shutdown( VkDevice device )
+    // void shutdown( VkDevice device )
+    // {
+    //     vkDestroyPipeline( device, graphicsPipeline, nullptr );
+    //     vkDestroyPipelineLayout( device, pipelineLayout, nullptr );
+    // }
+
+    void destroyGraphicsPipeline( VkDevice device,
+                                  VkPipeline& graphicsPipeline,
+                                  VkPipelineLayout& pipelineLayout )
     {
         vkDestroyPipeline( device, graphicsPipeline, nullptr );
         vkDestroyPipelineLayout( device, pipelineLayout, nullptr );

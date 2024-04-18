@@ -69,7 +69,7 @@ namespace muggy::graphics::vulkan
         bool nextImageIndex( VkSemaphore imageAvailable, 
                              VkFence fence, 
                              uint64_t timeout );
-        // NOTE(klek): I want these functions to be constexpr,
+        // TODO(klek): I want these functions to be constexpr,
         //             so we need to make the math functions into
         //             literal types
         /*constexpr*/ void setRenderpassRenderArea( math::u32v4d renderArea )
@@ -81,23 +81,27 @@ namespace muggy::graphics::vulkan
             m_Renderpass.clearColor = clearColor;
         }
 
-        [[nodiscard]] CONSTEXPR VkFramebuffer& currentFrameBuffer( void )
+        // Get functions for accessing certain member variables
+        [[nodiscard]] CONSTEXPR VkFramebuffer& getCurrentFrameBuffer( void )
         {
             return m_FrameBuffers[ m_ImageIndex ].frameBuffer;
         }
-        [[nodiscard]] CONSTEXPR vulkan_renderpass& renderpass( void )
+        [[nodiscard]] CONSTEXPR vulkan_renderpass& getRenderpass( void )
         {
             return m_Renderpass;
         }
         uint32_t getWidth( void ) const { return m_Window.getWidth(); }
         uint32_t getHeigth( void ) const { return m_Window.getHeight(); }
         constexpr uint32_t getCurrentFrame( void ) const { return m_FrameIndex; }
+        constexpr VkPipeline& getGraphicsPipeline( void ) { return m_GraphicsPipeline; }
+
+        // Check functions, to know status of swap chain and frame buffer
         constexpr bool isReCreating( void ) const { return m_IsRecreating; }
         constexpr bool isResized( void ) const { return m_IsFrameBufferResized; }
 
     private:
-        void createSurface( VkInstance instance );
-        void createRenderpass( void );
+        bool createSurface( VkInstance instance );
+        bool createRenderpass( void );
         bool createSwapchain( void );
         bool reCreateFramebuffers( void );
         void cleanSwapchain( void );
@@ -112,10 +116,13 @@ namespace muggy::graphics::vulkan
         bool                                m_IsRecreating{ false };
         uint32_t                            m_ImageIndex { 0 };
         uint32_t                            m_FrameIndex { 0 };
+        VkPipeline                          m_GraphicsPipeline { 0 };
+        VkPipelineLayout                    m_PipelineLayout { 0 };
     };
 
-    swapchain_details getSwapchainDetails( VkPhysicalDevice device, 
-                                           VkSurfaceKHR surface );
+    bool getSwapchainDetails( VkPhysicalDevice device,
+                              VkSurfaceKHR surface,
+                              swapchain_details& details );
 } // namespace muggy::graphics::vulkan
 
 #undef CONSTEXPR

@@ -13,11 +13,18 @@
 
 namespace muggy::graphics::vulkan::pipeline
 {
-    bool createGraphicsPipeline( VkDevice device, 
-                                 VkRenderPass renderPass );
-    VkPipeline& getGraphicsPipeline( void );
-    bool initialize( void );
-    void shutdown( VkDevice device );
+//    bool createGraphicsPipeline( VkDevice device,
+//                                 VkRenderPass renderPass );
+//    VkPipeline& getGraphicsPipeline( void );
+//    bool initialize( void );
+//    void shutdown( VkDevice device );
+    bool createGraphicsPipeline( VkDevice device, VkRenderPass renderPass,
+                                 VkPipeline& graphicsPipeline,
+                                 VkPipelineLayout& pipelineLayout );
+
+    void destroyGraphicsPipeline( VkDevice device,
+                                  VkPipeline& graphicsPipeline,
+                                  VkPipelineLayout& pipelineLayout );
 } // namespace muggy::graphics::vulkan::pipeline
 
 
