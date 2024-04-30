@@ -28,8 +28,9 @@ namespace muggy::graphics::vulkan
         platformInterface.surface.create = core::createSurface;
         platformInterface.surface.remove = core::removeSurface;
         platformInterface.surface.resize = core::resizeSurface;
+        platformInterface.surface.minimize = core::minimizeSurface;
         platformInterface.surface.getWidth = core::getSurfaceWidth;
-        platformInterface.surface.getHeight = core::getSurfaceHeigth;
+        platformInterface.surface.getHeight = core::getSurfaceHeight;
         platformInterface.surface.render = core::renderSurface;
 
         // Finally specify which platform this interface uses

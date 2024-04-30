@@ -17,6 +17,9 @@ test_timer                          timer { };
 static uint32_t                     iteration { 0 };
 bool isRunning { true };
 
+bool initRenderSurfaces( void );
+void shutdownRenderSurfaces( void );
+
 static bool closeWindow( muggy::event::windowCloseEvent& e )
 {
     // If we get here we should close the window
@@ -47,8 +50,47 @@ static bool resizeWindow( muggy::event::windowResizeEvent& e )
     // Get a reference to the surface that got resized
     muggy::graphics::render_surface& surface = surfaces[ e.getId() ];
 
-    // Indicate to the surface that it got resized
-    surface.surface.resize( e.getWidth(), e.getHeight() );
+    if ( e.getWidth() == 0 || e.getHeight() == 0 )
+    {
+        surface.surface.minimize( );
+    }
+    else
+    {
+        surface.surface.maximize( );
+        // Indicate to the surface that it got resized
+        surface.surface.resize( e.getWidth(), e.getHeight() );
+    }
+
+    // Return true to indicate we have dealt with the event
+    return true;
+}
+
+static bool keyWindow( muggy::event::keyReleasedEvent& e )
+{
+    assert( muggy::id::isValid( e.getId() ) );
+
+    bool result { false };
+
+    // Get a reference to the surface that got the key
+    muggy::graphics::render_surface& surface { surfaces[ e.getId() ] };
+
+    uint32_t key { e.getKeyCode() };
+    // Check if our desired key was released
+    switch ( key )
+    {
+        // Nr 82 should correspond to r-key
+        case 82:
+        {
+            // We want to reload the graphics api here
+            shutdownRenderSurfaces( );
+            result = initRenderSurfaces( );
+            assert( result );
+            break;
+        }
+        default:
+            break;
+    }
+
 
     // Return true to indicate we have dealt with the event
     return true;
@@ -60,6 +102,7 @@ static void onEventCallback( muggy::event::event& e )
 
     dispatcher.dispatch<muggy::event::windowCloseEvent>( &closeWindow );
     dispatcher.dispatch<muggy::event::windowResizeEvent>( &resizeWindow );
+    dispatcher.dispatch<muggy::event::keyReleasedEvent>( &keyWindow );
 
     //std::cout << e << std::endl;
 }
@@ -85,7 +128,7 @@ static void destroyRenderSurface( muggy::graphics::render_surface& surface )
     }
 }
 
-bool engineTest::initialize( void )
+bool initRenderSurfaces( void )
 {
     // Initialize the graphics with specified api
     bool result { muggy::graphics::initialize( muggy::graphics::graphics_platform::VULKAN ) };
@@ -98,8 +141,8 @@ bool engineTest::initialize( void )
 
     muggy::platform::window_init_info info [] 
     {
-        { &onEventCallback, NULL, "Window Nr 1", 0, 0, 640, 480 },
-        { &onEventCallback, NULL, "Window Nr 2", 100, 100, 480, 640 },
+        { &onEventCallback, NULL, "Window Nr 1", 100, 100, 640, 480 },
+        { &onEventCallback, NULL, "Window Nr 2", 400, 400, 480, 640 },
         { &onEventCallback, NULL, "Window Nr 3", 200, 200, 300, 200 },
         { &onEventCallback, NULL, "Window Nr 4", 300, 300, 800, 400 }
     };
@@ -109,8 +152,23 @@ bool engineTest::initialize( void )
         createRenderSurface( surfaces[i], info[i] );
     }
 
-
     return result;
+}
+
+void shutdownRenderSurfaces( void )
+{
+    for ( uint32_t i = 0; i < NR_OF_SURFACES; i++ )
+    {
+        destroyRenderSurface( surfaces[i] );
+    }
+
+    // Shutdown the graphics engine
+    muggy::graphics::shutdown();
+}
+
+bool engineTest::initialize( void )
+{
+    return initRenderSurfaces( );
 }
 
 void engineTest::run( void ) 
@@ -139,13 +197,7 @@ void engineTest::run( void )
 
 void engineTest::shutdown( void ) 
 {
-    for ( uint32_t i = 0; i < NR_OF_SURFACES; i++ )
-    {
-        destroyRenderSurface( surfaces[i] );
-    }
-
-    // Shutdown the graphics engine
-    muggy::graphics::shutdown();
+    shutdownRenderSurfaces( );
 }
 
 #endif

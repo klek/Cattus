@@ -22,13 +22,17 @@ namespace muggy::graphics::vulkan::renderpass
                            uint32_t stencil,
                            vulkan_renderpass& renderPass );
     void destroyRenderPass( VkDevice device, vulkan_renderpass& renderPass );
-    void beginRenderPass( VkCommandBuffer cmdBuffer, 
+    void beginRenderPass( VkCommandBuffer cmdBuffer,
                           vulkan_cmd_buffer::state& state,
                           vulkan_renderpass& renderPass,
                           VkFramebuffer frameBuffer );
-    void endRenderPass( VkCommandBuffer cmdBuffer, 
+    void beginRenderPass( const VkCommandBuffer& cmdBuffer,
+                          const vulkan_renderpass& renderPass,
+                          const VkFramebuffer& frameBuffer );
+    void endRenderPass( VkCommandBuffer cmdBuffer,
                         vulkan_cmd_buffer::state& state,
                         vulkan_renderpass& renderPass );
+    void endRenderPass( const VkCommandBuffer& cmdBuffer );
 } // namespace muggy::graphics::vulkan::renderpass
 
 

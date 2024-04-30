@@ -11,6 +11,13 @@
 
 namespace muggy::graphics::vulkan
 {
+    namespace // Anonymous namespace, ie only for use in this cpp-file
+    {
+
+    } // Anonymous namespace, ie only for use in this cpp-file
+
+    //****************************************************************
+    // Image related functions
     bool createImage( const image_init_info* const initInfo, 
                       vulkan_image& image )
     {
@@ -53,11 +60,13 @@ namespace muggy::graphics::vulkan
         VkMemoryRequirements memReqs;
         vkGetImageMemoryRequirements( initInfo->device, image.image, &memReqs );
 
-        int32_t index { core::findMemoryIndex( memReqs.memoryTypeBits, initInfo->memoryFlags ) };
-        if ( index == -1 )
+        uint32_t index { uint32_invalid_id };
+        bool foundMemory { core::findMemoryIndex( memReqs.memoryTypeBits, initInfo->memoryFlags, index ) };
+        if ( !foundMemory || uint32_invalid_id == index )
         {
             MSG("The required memory type was not found...");
-            assert( index == -1 );
+            assert( uint32_invalid_id == index );
+            assert( !foundMemory );
         }
 
         // Allocate memory for image
@@ -149,6 +158,8 @@ namespace muggy::graphics::vulkan
         }
     }
 
+    //****************************************************************
+    // Framebuffer related functions
     bool createFrameBuffer( VkDevice device,
                             vulkan_renderpass& renderPass,
                             uint32_t width,
@@ -192,14 +203,17 @@ namespace muggy::graphics::vulkan
     void destroyFrameBuffer( VkDevice device, 
                              vulkan_framebuffer& frameBuffer )
     {
-        vkDestroyFramebuffer( device, frameBuffer.frameBuffer, nullptr );
+        if ( VK_NULL_HANDLE != frameBuffer.frameBuffer )
+        {
+            vkDestroyFramebuffer( device, frameBuffer.frameBuffer, nullptr );
+        }
         if ( frameBuffer.attachments.data() )
         {
             frameBuffer.attachments.clear();
         }
 
-        frameBuffer.frameBuffer = nullptr;
-        frameBuffer.renderPass = nullptr;
+        frameBuffer.frameBuffer = VK_NULL_HANDLE;
+        frameBuffer.renderPass = VK_NULL_HANDLE;
         frameBuffer.attachCount = 0;
 
         MSG("Destroyed framebuffer!");

@@ -6,7 +6,8 @@
 //  Notes:   
 //********************************************************************
 
-#include "vulkanSurface.h"
+#if USE_OLD_SURFACE
+#include "oldVulkanSurface.h"
 #include "vulkanCore.h"
 #include "vulkanRenderPass.h"
 #include "vulkanResources.h"
@@ -132,7 +133,7 @@ namespace muggy::graphics::vulkan
             info.subresourceRange.layerCount = 1;
 
             VkResult result { VK_SUCCESS };
-            result = vkCreateImageView( core::getLogicalDevice(), & info, nullptr, &imageView );
+            result = vkCreateImageView( core::getLogicalDevice(), &info, nullptr, &imageView );
             if ( VK_SUCCESS != result )
             {
                 MSG("Failed to create image view...");
@@ -267,12 +268,12 @@ namespace muggy::graphics::vulkan
                                         imageAvailable,
                                         fence, 
                                         &m_ImageIndex );
-        if ( result == VK_ERROR_OUT_OF_DATE_KHR )
+        if ( VK_ERROR_OUT_OF_DATE_KHR == result )
         {
             reCreateSwapchain();
             return false;
         }
-        else if ( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR )
+        else if ( VK_SUCCESS != result && VK_SUBOPTIMAL_KHR != result )
         {
             MSG("Failed to aquire swapchain image...");
             return false;
@@ -706,3 +707,5 @@ namespace muggy::graphics::vulkan
     }
 
 } // namespace muggy::graphics::vulkan
+
+#endif

@@ -61,6 +61,7 @@ project "muggy"
         "%{prj.name}/thirdparty/**.cpp",
         "%{prj.name}/thirdparty/**.c",
         "%{prj.name}/thirdparty/**.h",
+        "%{prj.name}/code/graphics/vulkan/oldCode/**"
     }
     includedirs 
     { 

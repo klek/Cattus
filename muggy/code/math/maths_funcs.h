@@ -39,6 +39,13 @@ namespace muggy::math
 //    long double maths_tan(long double x);
 
     //
+    // Defining cosine functions and overloads
+    //
+    // TODO(klek): Consider adding own implementations for these functions
+    template <typename T>
+    T maths_abs( T x );
+
+    //
     // Defining a toRadians function
     //
     template <typename T>

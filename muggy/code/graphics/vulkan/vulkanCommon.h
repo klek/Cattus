@@ -28,6 +28,13 @@
 
 namespace muggy::graphics::vulkan
 {
+    namespace constants
+    {
+        // Constant for desribing maximum "virtual" frames that this vulkan
+        // implementation uses
+        constexpr uint32_t FRAME_BUFFER_COUNT { 3 };
+    } // namespace constants
+
     struct vulkan_image
     {
         VkImage                     image;

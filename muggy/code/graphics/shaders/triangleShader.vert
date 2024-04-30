@@ -1,10 +1,16 @@
 #version 450
 
-layout(location = 0) in vec2 inPosition;
+layout(location = 0) in vec4 inPosition;
 
-layout(location = 1) in vec3 inColor;
+layout(location = 1) in vec4 inColor;
 
-layout(location = 0) out vec3 fragColor;
+layout(location = 0) out vec4 fragColor;
+
+layout(push_constant) uniform Push {
+    float width;
+    float height;
+    float frame;
+} push;
 
 //vec2 positions[3] = vec2[](
 //    vec2(0.0, -0.5),
@@ -25,6 +31,7 @@ void main()
 //    fragColor = colors[gl_VertexIndex];
 
     // New code for vertices that is sent to the GPU from the CPU
-    gl_Position = vec4(inPosition, 0.0, 1.0);
-    fragColor = inColor;
+    gl_Position = vec4( inPosition.x, inPosition.y, inPosition.z, inPosition.w );
+//    fragColor = inColor;
+    fragColor = inPosition;
 }

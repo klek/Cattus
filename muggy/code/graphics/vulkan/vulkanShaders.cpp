@@ -36,7 +36,8 @@ namespace muggy::graphics::vulkan::shaders
         {
             { "triangleShader.vert", "TriangleVS", engine_shader::triangleShaderVS , shader_type::vertex },
             { "triangleShader.frag", "TriangleFS", engine_shader::triangleShaderFS , shader_type::fragment },
-            { "mandelBrot.frag", "MandelBrotFS", engine_shader::mandelBrotFS , shader_type::fragment }
+            { "mandelBrot.frag", "MandelBrotFS", engine_shader::mandelBrotFS , shader_type::fragment },
+            { "juliaSet.frag", "JuliaSetFS", engine_shader::juliaSetFS , shader_type::fragment }
         };
         static_assert( _countof( shaderInfo ) == engine_shader::count );
         constexpr const char* shaderSrcFolder{ 
@@ -48,7 +49,8 @@ namespace muggy::graphics::vulkan::shaders
         constexpr const char* engineShaderPaths[]{
             "../resources/triangleVert.spv",
             "../resources/triangleFrag.spv",
-            "../resources/mandelBrotFrag.spv"
+            "../resources/mandelBrotFrag.spv",
+            "../resources/juliaSetFrag.spv"
         };
 
         // Each element in this array points to an offset within the 

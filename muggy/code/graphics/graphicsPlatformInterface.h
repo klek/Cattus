@@ -24,6 +24,7 @@ namespace muggy::graphics
             surface(*create)( platform::window );
             void(*remove)( surface_id );
             void(*resize)( surface_id, uint32_t, uint32_t );
+            void(*minimize)( surface_id, bool );
             uint32_t(*getWidth)( surface_id );
             uint32_t(*getHeight)( surface_id );
             void(*render)( surface_id );

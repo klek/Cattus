@@ -7,13 +7,14 @@
 //********************************************************************
 
 #include "vulkanRenderPass.h"
+#include "vulkanHelpers.h"
 
 namespace muggy::graphics::vulkan::renderpass
 {
     namespace
     {
         // Local helper functions
-        VkAttachmentDescription getColorAttachment( VkFormat imageFormat )
+        VkAttachmentDescription setColorAttachment( VkFormat imageFormat )
         {
             // TODO(klek): This is being hardcoded in, but is likely
             //             something that should be configurable
@@ -33,7 +34,7 @@ namespace muggy::graphics::vulkan::renderpass
             return desc;
         }
 
-        VkAttachmentDescription getDepthAttachment( VkFormat depthFormat )
+        VkAttachmentDescription setDepthAttachment( VkFormat depthFormat )
         {
             // TODO(klek): This is being hardcoded in, but is likely
             //             something that should be configurable as we
@@ -52,6 +53,20 @@ namespace muggy::graphics::vulkan::renderpass
             desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
             return desc;
+        }
+
+        VkSubpassDependency setSubpassDependency( )
+        {
+            VkSubpassDependency dependency { };
+            dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+            dependency.dstSubpass = 0;
+            dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dependency.srcAccessMask = 0;
+            dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+            return dependency;
         }
     } // namespace
 
@@ -79,7 +94,7 @@ namespace muggy::graphics::vulkan::renderpass
         // TODO(klek): Get inputAttachment...
 
         // Get the color attachment descriptor
-        attachmentDesc[ 0 ] = getColorAttachment( swapchainImageFormat );
+        attachmentDesc[ 0 ] = setColorAttachment( swapchainImageFormat );
 
         // Setup the attachment reference, later used in the subpass
         VkAttachmentReference colorAttachRef;
@@ -93,7 +108,7 @@ namespace muggy::graphics::vulkan::renderpass
         // TODO(klek): This is being hardcoded in, but is likely
         //             something that should be configurable as we
         //             might not always want a depth attachment
-        attachmentDesc[ 1 ] = getDepthAttachment( depthFormat );
+        attachmentDesc[ 1 ] = setDepthAttachment( depthFormat );
 
         // Setup the attachment reference, later used in the subpass
         VkAttachmentReference depthAttachRef{ };
@@ -129,14 +144,8 @@ namespace muggy::graphics::vulkan::renderpass
         //************************************************************
         // Renderpass dependencies
         // TODO(klek): This needs to be configurable
-        VkSubpassDependency dependency{ };
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependency.dependencyFlags = 0;
+        utils::vector<VkSubpassDependency> dependencies {};
+        dependencies.push_back( setSubpassDependency( ) );
 
         //************************************************************
         // Setup the renderpass create info
@@ -148,8 +157,8 @@ namespace muggy::graphics::vulkan::renderpass
         info.pAttachments = attachmentDesc;
         info.subpassCount = 1;
         info.pSubpasses = &subPass;
-        info.dependencyCount = 1;
-        info.pDependencies = &dependency;
+        info.dependencyCount = static_cast<uint32_t>( dependencies.size() );
+        info.pDependencies = dependencies.data();
 
         //************************************************************
         // Setup the renderpass
@@ -178,7 +187,7 @@ namespace muggy::graphics::vulkan::renderpass
         }
     }
 
-    void beginRenderPass( VkCommandBuffer cmdBuffer, 
+    void beginRenderPass( VkCommandBuffer cmdBuffer,
                           vulkan_cmd_buffer::state& state,
                           vulkan_renderpass& renderPass,
                           VkFramebuffer frameBuffer )
@@ -210,7 +219,38 @@ namespace muggy::graphics::vulkan::renderpass
         state = vulkan_cmd_buffer::CMD_IN_RENDER_PASS;
     }
 
-    void endRenderPass( VkCommandBuffer cmdBuffer, 
+    void beginRenderPass( const VkCommandBuffer& cmdBuffer, 
+                          const vulkan_renderpass& renderPass,
+                          const VkFramebuffer& frameBuffer )
+    {
+        VkClearValue values[2]{ };
+        values[0].color.float32[0] = renderPass.clearColor.x;
+        values[0].color.float32[1] = renderPass.clearColor.y;
+        values[0].color.float32[2] = renderPass.clearColor.z;
+        //values[0].color.float32[3] = renderPass.clearColor.a;
+        values[0].color.float32[3] = renderPass.clearColor.z;
+
+        values[1].depthStencil.depth = renderPass.depth;
+        values[1].depthStencil.stencil = renderPass.stencil;
+
+        VkRect2D renderArea { };
+        renderArea.offset.x = renderPass.renderArea.x;
+        renderArea.offset.y = renderPass.renderArea.y;
+        renderArea.extent.width = renderPass.renderArea.width;
+        renderArea.extent.height = renderPass.renderArea.height;
+        VkRenderPassBeginInfo info {
+            vulkan_utils::setRenderpassBeginInfo( renderPass.renderPass,
+                                                  frameBuffer,
+                                                  renderArea )
+        };
+        info.clearValueCount = 2;
+        info.pClearValues = values;
+
+        // Start the render pass
+        vkCmdBeginRenderPass( cmdBuffer, &info, VK_SUBPASS_CONTENTS_INLINE );
+    }
+
+    void endRenderPass( VkCommandBuffer cmdBuffer,
                         vulkan_cmd_buffer::state& state,
                         vulkan_renderpass& renderPass )
     {
@@ -218,4 +258,9 @@ namespace muggy::graphics::vulkan::renderpass
         state = vulkan_cmd_buffer::CMD_RECORDING;
     }
     
+    void endRenderPass( const VkCommandBuffer& cmdBuffer )
+    {
+        vkCmdEndRenderPass( cmdBuffer );
+    }
+
 } // namespace muggy::graphics::vulkan::renderpass

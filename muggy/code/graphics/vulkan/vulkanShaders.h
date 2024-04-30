@@ -34,6 +34,7 @@ namespace muggy::graphics::vulkan::shaders
             triangleShaderVS = 0,
             triangleShaderFS,
             mandelBrotFS,
+            juliaSetFS,
 
             count
         };

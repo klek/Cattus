@@ -115,6 +115,18 @@ namespace muggy::graphics
         gfx.surface.resize( m_Id, width, height );
     }
 
+    void surface::minimize( void ) const
+    {
+        assert( isValid() );
+        gfx.surface.minimize( m_Id, true );
+    }
+
+    void surface::maximize( void ) const
+    {
+        assert( isValid() );
+        gfx.surface.minimize( m_Id, false );
+    }
+
     uint32_t surface::getWidth( void ) const
     {
         assert( isValid() );

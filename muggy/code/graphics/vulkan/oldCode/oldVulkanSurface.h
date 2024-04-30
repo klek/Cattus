@@ -9,7 +9,11 @@
 #if !defined(VULKAN_SURFACE_H)
 #define VULKAN_SURFACE_H
 
+#define USE_OLD_SURFACE         0
+
+#if USE_OLD_SURFACE
 #include "vulkanCommon.h"
+
 
 #if USE_STL_VECTOR
 #define CONSTEXPR               
@@ -91,13 +95,14 @@ namespace muggy::graphics::vulkan
             return m_Renderpass;
         }
         uint32_t getWidth( void ) const { return m_Window.getWidth(); }
-        uint32_t getHeigth( void ) const { return m_Window.getHeight(); }
+        uint32_t getHeight( void ) const { return m_Window.getHeight(); }
         constexpr uint32_t getCurrentFrame( void ) const { return m_FrameIndex; }
         constexpr VkPipeline& getGraphicsPipeline( void ) { return m_GraphicsPipeline; }
 
         // Check functions, to know status of swap chain and frame buffer
         constexpr bool isReCreating( void ) const { return m_IsRecreating; }
         constexpr bool isResized( void ) const { return m_IsFrameBufferResized; }
+        constexpr bool isMinimized( void ) const { return false; }
 
     private:
         bool createSurface( VkInstance instance );
@@ -126,5 +131,7 @@ namespace muggy::graphics::vulkan
 } // namespace muggy::graphics::vulkan
 
 #undef CONSTEXPR
+
+#endif
 
 #endif

@@ -27,6 +27,8 @@ namespace muggy::graphics
         constexpr bool isValid( ) const { return id::isValid( m_Id ); }
 
         void resize( uint32_t width, uint32_t height ) const;
+        void minimize( void ) const;
+        void maximize( void ) const;
         uint32_t getWidth( void ) const;
         uint32_t getHeight( void ) const;
         void render( void ) const;

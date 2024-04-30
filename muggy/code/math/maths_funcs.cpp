@@ -44,6 +44,16 @@ namespace muggy::math
     }
     
     //
+    // Defining cosine functions and overloads
+    //
+    // TODO(klek): Consider adding own implementations for these functions
+    template <typename T>
+    T maths_abs( T x )
+    {
+        return abs( x );
+    }
+
+    //
     // Defining a toRadians function
     //
     template <typename T>
