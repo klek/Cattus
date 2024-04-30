@@ -91,8 +91,8 @@ namespace muggy::graphics::vulkan::descriptor
         for ( pool_size_ratio& ratio : poolRatios )
         {
             poolSizes.push_back( VkDescriptorPoolSize{ 
-                .type = ratio.type,
-                .descriptorCount = static_cast<uint32_t>( ratio.ratio * maxSets ) 
+                ratio.type,
+                static_cast<uint32_t>( ratio.ratio * maxSets )
             } );
         }
 

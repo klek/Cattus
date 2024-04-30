@@ -334,10 +334,10 @@ namespace muggy::graphics::vulkan::vulkan_utils
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.image = image;
 
-        VkImageAspectFlags aspectFlags { 
-            ( ( VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL == newLayout ) ?
-                VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT    )
-        };
+        VkImageAspectFlags aspectFlags { };
+        aspectFlags = ( ( VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL == newLayout ) ?
+                        VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT    );
+
         barrier.subresourceRange = imageSubresourceRange( aspectFlags );
 
         vkCmdPipelineBarrier( cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,

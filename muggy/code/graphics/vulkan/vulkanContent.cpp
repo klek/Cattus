@@ -208,10 +208,10 @@ namespace muggy::graphics::vulkan::content
 
         // Create a new game object
         // Which is a simple triangle 
-        vertices.push_back( { .pos{ -1.0f, -1.0f, 0.0f, 1.0f }, .color{ 1.0f, 0.0f, 0.0f, 1.0f } } );
-        vertices.push_back( { .pos{ -1.0f, 1.0f, 0.0f, 1.0f }, .color{ 0.0f, 1.0f, 0.0f, 1.0f } } );
-        vertices.push_back( { .pos{ 1.0f, 1.0f, 0.0f, 1.0f }, .color{ 0.0f, 0.0f, 1.0f, 1.0f } } );
-        vertices.push_back( { .pos{ 1.0f, -1.0f, 0.0f, 1.0f }, .color{ 0.0f, 0.0f, 0.0f, 1.0f } } );
+        vertices.push_back( { { -1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+        vertices.push_back( { { -1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
+        vertices.push_back( { { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } } );
+        vertices.push_back( { { 1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f } } );
 
         // Setup the indices for same triangle
         indices.push_back( 0 );
