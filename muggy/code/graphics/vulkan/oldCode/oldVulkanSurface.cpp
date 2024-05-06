@@ -8,10 +8,10 @@
 
 #if USE_OLD_SURFACE
 #include "oldVulkanSurface.h"
-#include "vulkanCore.h"
-#include "vulkanRenderPass.h"
-#include "vulkanResources.h"
-#include "vulkanGraphicsPipeline.h"
+#include "oldVulkanCore.h"
+#include "../vulkanRenderPass.h"
+#include "../vulkanResources.h"
+#include "oldVulkanGraphicsPipeline.h"
 
 namespace muggy::graphics::vulkan
 {

@@ -6,17 +6,17 @@
 //  Notes:   
 //********************************************************************
 
-#if 0
+#if USE_OLD_VULKAN_CORE
 
-#include "vulkanCore.h"
-#include "vulkanCommon.h"
-#include "vulkanValidation.h"
-#include "vulkanSurface.h"
-#include "vulkanCommandBuffer.h"
-#include "vulkanRenderPass.h"
-#include "vulkanShaders.h"
-#include "vulkanGraphicsPipeline.h"
-#include "vulkanVertex.h"
+#include "../vulkanCore.h"
+#include "../vulkanCommon.h"
+#include "../vulkanValidation.h"
+#include "oldVulkanSurface.h"
+#include "../vulkanCommandBuffer.h"
+#include "../vulkanRenderPass.h"
+#include "../vulkanShaders.h"
+#include "oldVulkanGraphicsPipeline.h"
+#include "../vulkanVertex.h"
 #include <set>
 #include <map>
 

@@ -5,12 +5,12 @@
 //  Author:  klek
 //  Notes:   
 //********************************************************************
-#if 0
+#if USE_OLD_GRAPHICS_PIPELINE
 
-#include "vulkanGraphicsPipeline.h"
-#include "vulkanShaders.h"
-#include "vulkanVertex.h"
-#include "vulkanHelpers.h"
+#include "oldVulkanGraphicsPipeline.h"
+#include "../vulkanShaders.h"
+#include "../vulkanVertex.h"
+#include "../vulkanHelpers.h"
 
 namespace muggy::graphics::vulkan::pipeline
 {

@@ -12,7 +12,7 @@
 #define USE_OLD_SURFACE         0
 
 #if USE_OLD_SURFACE
-#include "vulkanCommon.h"
+#include "../vulkanCommon.h"
 
 
 #if USE_STL_VECTOR

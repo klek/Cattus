@@ -9,8 +9,10 @@
 #if !defined(VULKAN_GRAPHICS_PIPELINE_H)
 #define VULKAN_GRAPHICS_PIPELINE_H
 
-#if 0
-#include "vulkanCommon.h"
+#define USE_OLD_GRAPHICS_PIPELINE   0
+
+#if USE_OLD_GRAPHICS_PIPELINE
+#include "../vulkanCommon.h"
 
 namespace muggy::graphics::vulkan::pipeline
 {
