@@ -37,39 +37,43 @@ namespace muggy::math
         };
         
         // Constructors
-        vec4dTemplate();
-        vec4dTemplate( const vType& _x, 
-                       const vType& _y, 
-                       const vType& _z, 
-                       const vType& _w );
-        vec4dTemplate( const vec4Type& _v );
-        vec4dTemplate( const vType (&_arr)[4] );
+        constexpr vec4dTemplate();
+        constexpr vec4dTemplate( const vType& _s );
+        constexpr vec4dTemplate( const vType& _x, 
+                                 const vType& _y, 
+                                 const vType& _z, 
+                                 const vType& _w );
+        constexpr vec4dTemplate( const vec4Type& _v );
+        constexpr explicit vec4dTemplate( const vType (&_arr)[4] );
 
         // Member functions
         // Implement basic math functions for 4D vectors
-        vec4Type& add( const vec4Type& other );
-        vec4Type& subtract( const vec4Type& other );
-        vec4Type& multiply( const vec4Type& other );
-        vec4Type& divide( const vec4Type& other );
+        constexpr vec4Type& add( const vec4Type& other );
+        constexpr vec4Type& subtract( const vec4Type& other );
+        constexpr vec4Type& multiply( const vec4Type& other );
+        constexpr vec4Type& divide( const vec4Type& other );
 
         // Math operators overload
         // NOTE(klek): Simply calls above math functions
-        template <typename Y>
-        friend vec4Type operator+( vec4Type left, const vec4dTemplate<Y>& right );
-        template <typename Y>
-        friend vec4Type operator-( vec4Type left, const vec4dTemplate<Y>& right );
-        template <typename Y>
-        friend vec4Type operator*( vec4Type left, const vec4dTemplate<Y>& right );
-        template <typename Y>
-        friend vec4Type operator/( vec4Type left, const vec4dTemplate<Y>& right );
+        constexpr vec4Type& operator+=( const vec4Type& other );
+        constexpr vec4Type& operator-=( const vec4Type& other );
+        constexpr vec4Type& operator*=( const vec4Type& other );
+        constexpr vec4Type& operator/=( const vec4Type& other );
 
-        vec4Type& operator+=( const vec4Type& other );
-        vec4Type& operator-=( const vec4Type& other );
-        vec4Type& operator*=( const vec4Type& other );
-        vec4Type& operator/=( const vec4Type& other );
+        // Boolean operators overload
+        constexpr bool operator==( const vec4Type other ) const;
+        constexpr bool operator!=( const vec4Type other ) const;
 
-        bool operator==( const vec4Type other ) const;
-        bool operator!=( const vec4Type other ) const;
+        //************************************************************
+        // Friend functions, could probably be outside of the struct
+        template <typename Y>
+        friend constexpr vec4Type operator+( vec4Type left, const vec4dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec4Type operator-( vec4Type left, const vec4dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec4Type operator*( vec4Type left, const vec4dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec4Type operator/( vec4Type left, const vec4dTemplate<Y>& right );
 
         // Output operators, overloaded
         template <typename Y>

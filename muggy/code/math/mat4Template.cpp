@@ -13,7 +13,7 @@ namespace muggy::math
 {
     // Constructors
     template <typename T>
-    mat4Template<T>::mat4Template( ) 
+    constexpr mat4Template<T>::mat4Template( ) 
     {
         for ( int i = 0; i < FOUR_BY_FOUR; i++ )
         {
@@ -22,7 +22,7 @@ namespace muggy::math
     }
 
     template <typename T>
-    mat4Template<T>::mat4Template( T diagonal )
+    constexpr mat4Template<T>::mat4Template( T diagonal )
     {
         for ( int i = 0; i < FOUR_BY_FOUR; i++ )
         {
@@ -37,7 +37,7 @@ namespace muggy::math
     }
 
     template <typename T>
-    mat4Template<T>::mat4Template( const mat4Template<T>& m ) 
+    constexpr mat4Template<T>::mat4Template( const mat4Template<T>& m ) 
     {
         for ( int i = 0; i < FOUR_BY_FOUR; i++ )
         {
@@ -46,7 +46,7 @@ namespace muggy::math
     }
 
     template <typename T>
-    vec4dTemplate<T> mat4Template<T>::getColumn( int index )
+    constexpr vec4dTemplate<T> mat4Template<T>::getColumn( int index )
     {
         if ( index < 4 )
         {
@@ -61,7 +61,7 @@ namespace muggy::math
     }
     
     template <typename T>
-    vec4dTemplate<T> mat4Template<T>::getRow( int index )
+    constexpr vec4dTemplate<T> mat4Template<T>::getRow( int index )
     {
         if ( index < 4 )
         {
@@ -75,7 +75,7 @@ namespace muggy::math
     }
 
     template <typename T>
-    T mat4Template<T>::getElement( int index )
+    constexpr T mat4Template<T>::getElement( int index )
     {
         if ( index < FOUR_BY_FOUR )
             return elements[ index ];
@@ -93,7 +93,7 @@ namespace muggy::math
     // - Is there a way to do this more efficient than a 3-nested loop?
     // TODO(klek): Verify that this implementation is actually correct
     template <typename T>
-    mat4Template<T>& mat4Template<T>::multiply( const mat4Template<T>& other ) 
+    constexpr mat4Template<T>& mat4Template<T>::multiply( const mat4Template<T>& other ) 
     {
         // Temporary storage
         T data[ FOUR_BY_FOUR ];
@@ -134,7 +134,7 @@ namespace muggy::math
     //   puts result into Z
     // - Fourth row of matrix is not used
     template <typename T>
-    vec3dTemplate<T> mat4Template<T>::multiply( const vec3dTemplate<T>& other ) const
+    constexpr vec3dTemplate<T> mat4Template<T>::multiply( const vec3dTemplate<T>& other ) const
     {
         return ( vec3dTemplate<T>( cols[0].x * other.x + cols[1].x * other.y + cols[2].x * other.z + cols[3].x,
                                    cols[0].y * other.x + cols[1].y * other.y + cols[2].y * other.z + cols[3].y,
@@ -152,7 +152,7 @@ namespace muggy::math
     // - W-element in vector calculates like: Vector x fourth Matrix-row => Similar to X, but 
     //   puts result into Z
     template <typename T>
-    vec4dTemplate<T> mat4Template<T>::multiply( const vec4dTemplate<T>& other ) const
+    constexpr vec4dTemplate<T> mat4Template<T>::multiply( const vec4dTemplate<T>& other ) const
     {
         return ( vec4dTemplate<T>( cols[0].x * other.x + cols[1].x * other.y + cols[2].x * other.z + cols[3].x * other.w,
                                    cols[0].y * other.x + cols[1].y * other.y + cols[2].y * other.z + cols[3].y * other.w,
@@ -162,27 +162,27 @@ namespace muggy::math
     }
 
     template <typename T>
-    mat4Template<T> operator*( mat4Template<T> left, const mat4Template<T>& right )
+    constexpr mat4Template<T> operator*( mat4Template<T> left, const mat4Template<T>& right )
     { 
         return left.multiply( right ); 
     }
     
     template <typename T>
-    vec3dTemplate<T> operator*( const mat4Template<T>& left, 
+    constexpr vec3dTemplate<T> operator*( const mat4Template<T>& left, 
                                 const vec3dTemplate<T>& right )
     { 
         return left.multiply( right ); 
     }
 
     template <typename T>
-    vec4dTemplate<T> operator*( const mat4Template<T>& left, 
-                                const vec4dTemplate<T>& right )
+    constexpr vec4dTemplate<T> operator*( const mat4Template<T>& left, 
+                                          const vec4dTemplate<T>& right )
     { 
         return left.multiply( right ); 
     }
     
     template <typename T>
-    mat4Template<T>& mat4Template<T>::operator*=( const mat4Template<T>& other )
+    constexpr mat4Template<T>& mat4Template<T>::operator*=( const mat4Template<T>& other )
     { 
         return this->multiply( other ); 
     }
@@ -198,7 +198,7 @@ namespace muggy::math
     //    0     0     0     1
     //
     template <typename T>
-    mat4Template<T> mat4Template<T>::identity() 
+    constexpr mat4Template<T> mat4Template<T>::identity() 
     { 
         return mat4Template<T>( T( 1 ) ); 
     }
@@ -221,12 +221,12 @@ namespace muggy::math
     //    0     0     0          1
     //
     template <typename T>
-    mat4Template<T> mat4Template<T>::orthographic( T left, 
-                                                   T right, 
-                                                   T bottom, 
-                                                   T top, 
-                                                   T near, 
-                                                   T far )
+    constexpr mat4Template<T> mat4Template<T>::orthographic( T left, 
+                                                             T right, 
+                                                             T bottom, 
+                                                             T top, 
+                                                             T near, 
+                                                             T far )
     {
         mat4Template<T> result( T( 1 ) );
 
@@ -259,10 +259,10 @@ namespace muggy::math
     //     0     0     -1              0
     //
     template <typename T>
-    mat4Template<T> mat4Template<T>::perspective( T fov, 
-                                                  T aspectRatio, 
-                                                  T near, 
-                                                  T far)
+    constexpr mat4Template<T> mat4Template<T>::perspective( T fov, 
+                                                            T aspectRatio, 
+                                                            T near, 
+                                                            T far)
     {
         mat4Template<T> result;
 
@@ -292,7 +292,7 @@ namespace muggy::math
     //    0     0     0     1
     //
     template <typename T>
-    mat4Template<T> mat4Template<T>::translation( const vec3dTemplate<T>& translation ) 
+    constexpr mat4Template<T> mat4Template<T>::translation( const vec3dTemplate<T>& translation ) 
     {
         mat4Template<T> result( T( 1.0f ) );
 
@@ -317,7 +317,7 @@ namespace muggy::math
     //    0     0     0     1
     //
     template <typename T>
-    mat4Template<T> mat4Template<T>::rotation( T angle, const vec3dTemplate<T>& axis)
+    constexpr mat4Template<T> mat4Template<T>::rotation( T angle, const vec3dTemplate<T>& axis)
     {
         mat4Template<T> result( T( 1.0f ) );
 
@@ -353,7 +353,7 @@ namespace muggy::math
     //    0        0        0        1
     //
     template <typename T>
-    mat4Template<T> mat4Template<T>::scale(const vec3dTemplate<T>& scale)
+    constexpr mat4Template<T> mat4Template<T>::scale(const vec3dTemplate<T>& scale)
     {
         mat4Template<T> result( T( 1.0f ) );
 

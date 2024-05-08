@@ -13,7 +13,7 @@ namespace muggy::math
 {
     // Constructors
     template <typename T>
-    vec4dTemplate<T>::vec4dTemplate( ) 
+    constexpr vec4dTemplate<T>::vec4dTemplate( ) 
      : 
         x( T(0) ), 
         y( T(0) ), 
@@ -22,10 +22,19 @@ namespace muggy::math
     {}
 
     template <typename T>
-    vec4dTemplate<T>::vec4dTemplate( const T& _x, 
-                                     const T& _y, 
-                                     const T& _z, 
-                                     const T& _w )
+    constexpr vec4dTemplate<T>::vec4dTemplate( const T& _s )
+     :
+        x( _s ),
+        y( _s ),
+        z( _s ),
+        w( _s )
+    {}
+
+    template <typename T>
+    constexpr vec4dTemplate<T>::vec4dTemplate( const T& _x, 
+                                               const T& _y, 
+                                               const T& _z, 
+                                               const T& _w )
      :
         x( _x ),
         y( _y ),
@@ -34,7 +43,7 @@ namespace muggy::math
     {}
 
     template <typename T>
-    vec4dTemplate<T>::vec4dTemplate( const vec4dTemplate<T>& _v )
+    constexpr vec4dTemplate<T>::vec4dTemplate( const vec4dTemplate<T>& _v )
      : 
         x( _v.x ),
         y( _v.y ),
@@ -43,7 +52,7 @@ namespace muggy::math
     {}
 
     template <typename T>
-    vec4dTemplate<T>::vec4dTemplate( const T (&_arr)[4] )
+    constexpr vec4dTemplate<T>::vec4dTemplate( const T (&_arr)[4] )
      : 
         x( _arr[0] ),
         y( _arr[1] ),
@@ -54,7 +63,7 @@ namespace muggy::math
     // Member functions
     // Implement basic math functions for 4D vectors
     template <typename T>
-    vec4dTemplate<T>& vec4dTemplate<T>::add( const vec4dTemplate<T>& other )
+    constexpr vec4dTemplate<T>& vec4dTemplate<T>::add( const vec4dTemplate<T>& other )
     {
         this->x += other.x;
         this->y += other.y;
@@ -65,7 +74,7 @@ namespace muggy::math
     }
 
     template <typename T>
-    vec4dTemplate<T>& vec4dTemplate<T>::subtract( const vec4dTemplate<T>& other )
+    constexpr vec4dTemplate<T>& vec4dTemplate<T>::subtract( const vec4dTemplate<T>& other )
     {
         this->x -= other.x;
         this->y -= other.y;
@@ -76,7 +85,7 @@ namespace muggy::math
     }
 
     template <typename T>
-    vec4dTemplate<T>& vec4dTemplate<T>::multiply( const vec4dTemplate<T>& other )
+    constexpr vec4dTemplate<T>& vec4dTemplate<T>::multiply( const vec4dTemplate<T>& other )
     {
         this->x *= other.x;
         this->y *= other.y;
@@ -87,7 +96,7 @@ namespace muggy::math
     }
 
     template <typename T>
-    vec4dTemplate<T>& vec4dTemplate<T>::divide( const vec4dTemplate<T>& other )
+    constexpr vec4dTemplate<T>& vec4dTemplate<T>::divide( const vec4dTemplate<T>& other )
     {
         this->x /= other.x;
         this->y /= other.y;
@@ -100,55 +109,32 @@ namespace muggy::math
     // Math operators overload
     // NOTE(klek): Simply calls above math functions
     template <typename T>
-    vec4dTemplate<T> operator+( vec4dTemplate<T> left, const vec4dTemplate<T>& right )
-    {
-        return left.add( right );
-    }
-
-    template <typename T>
-    vec4dTemplate<T> operator-( vec4dTemplate<T> left, const vec4dTemplate<T>& right )
-    {
-        return left.subtract( right );
-    }
-
-    template <typename T>
-    vec4dTemplate<T> operator*( vec4dTemplate<T> left, const vec4dTemplate<T>& right )
-    {
-        return left.multiply( right );
-    }
-
-    template <typename T>
-    vec4dTemplate<T> operator/( vec4dTemplate<T> left, const vec4dTemplate<T>& right )
-    {
-        return left.divide( right );
-    }
-
-    template <typename T>
-    vec4dTemplate<T>& vec4dTemplate<T>::operator+=( const vec4dTemplate<T>& other )
+    constexpr vec4dTemplate<T>& vec4dTemplate<T>::operator+=( const vec4dTemplate<T>& other )
     {
         return this->add( other );
     }
 
     template <typename T>
-    vec4dTemplate<T>& vec4dTemplate<T>::operator-=( const vec4dTemplate<T>& other )
+    constexpr vec4dTemplate<T>& vec4dTemplate<T>::operator-=( const vec4dTemplate<T>& other )
     {
         return this->subtract( other );
     }
 
     template <typename T>
-    vec4dTemplate<T>& vec4dTemplate<T>::operator*=( const vec4dTemplate<T>& other )
+    constexpr vec4dTemplate<T>& vec4dTemplate<T>::operator*=( const vec4dTemplate<T>& other )
     {
         return this->multiply( other );
     }
 
     template <typename T>
-    vec4dTemplate<T>& vec4dTemplate<T>::operator/=( const vec4dTemplate<T>& other )
+    constexpr vec4dTemplate<T>& vec4dTemplate<T>::operator/=( const vec4dTemplate<T>& other )
     {
         return this->divide( other );
     }
 
+    // Boolean operators overload
     template <typename T>
-    bool vec4dTemplate<T>::operator==( const vec4dTemplate<T> other ) const
+    constexpr bool vec4dTemplate<T>::operator==( const vec4dTemplate<T> other ) const
     {
         return ( this->x == other.x &&
                  this->y == other.y &&
@@ -157,9 +143,35 @@ namespace muggy::math
     }
 
     template <typename T>
-    bool vec4dTemplate<T>::operator!=( const vec4dTemplate<T> other ) const
+    constexpr bool vec4dTemplate<T>::operator!=( const vec4dTemplate<T> other ) const
     {
         return !( *this == other );
+    }
+
+    //****************************************************************
+    // Friend functions implementation
+    template <typename T>
+    constexpr vec4dTemplate<T> operator+( vec4dTemplate<T> left, const vec4dTemplate<T>& right )
+    {
+        return left.add( right );
+    }
+
+    template <typename T>
+    constexpr vec4dTemplate<T> operator-( vec4dTemplate<T> left, const vec4dTemplate<T>& right )
+    {
+        return left.subtract( right );
+    }
+
+    template <typename T>
+    constexpr vec4dTemplate<T> operator*( vec4dTemplate<T> left, const vec4dTemplate<T>& right )
+    {
+        return left.multiply( right );
+    }
+
+    template <typename T>
+    constexpr vec4dTemplate<T> operator/( vec4dTemplate<T> left, const vec4dTemplate<T>& right )
+    {
+        return left.divide( right );
     }
 
     // Output operators, overloaded

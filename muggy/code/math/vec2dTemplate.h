@@ -34,37 +34,41 @@ namespace muggy::math
         };
         
         // Constructors
-        vec2dTemplate();
-        vec2dTemplate( const vType& _x, 
-                       const vType& _y );
-        vec2dTemplate( const vec2Type& _v );
-        vec2dTemplate( const vType (&_arr)[2] );
+        constexpr vec2dTemplate();
+        constexpr vec2dTemplate( const vType& _s );
+        constexpr vec2dTemplate( const vType& _x, 
+                                 const vType& _y );
+        constexpr vec2dTemplate( const vec2Type& _v );
+        constexpr vec2dTemplate( const vType (&_arr)[2] );
 
         // Member functions
         // Implement basic math functions for 2D vectors
-        vec2Type& add( const vec2Type& other );
-        vec2Type& subtract( const vec2Type& other );
-        vec2Type& multiply( const vec2Type& other );
-        vec2Type& divide( const vec2Type& other );
+        constexpr vec2Type& add( const vec2Type& other );
+        constexpr vec2Type& subtract( const vec2Type& other );
+        constexpr vec2Type& multiply( const vec2Type& other );
+        constexpr vec2Type& divide( const vec2Type& other );
 
         // Math operators overload
         // NOTE(klek): Simply calls above math functions
-        template <typename Y>
-        friend vec2Type operator+( vec2Type left, const vec2dTemplate<Y>& right );
-        template <typename Y>
-        friend vec2Type operator-( vec2Type left, const vec2dTemplate<Y>& right );
-        template <typename Y>
-        friend vec2Type operator*( vec2Type left, const vec2dTemplate<Y>& right );
-        template <typename Y>
-        friend vec2Type operator/( vec2Type left, const vec2dTemplate<Y>& right );
+        constexpr vec2Type& operator+=( const vec2Type& other );
+        constexpr vec2Type& operator-=( const vec2Type& other );
+        constexpr vec2Type& operator*=( const vec2Type& other );
+        constexpr vec2Type& operator/=( const vec2Type& other );
 
-        vec2Type& operator+=( const vec2Type& other );
-        vec2Type& operator-=( const vec2Type& other );
-        vec2Type& operator*=( const vec2Type& other );
-        vec2Type& operator/=( const vec2Type& other );
+        // Boolean operators overload
+        constexpr bool operator==( const vec2Type other ) const;
+        constexpr bool operator!=( const vec2Type other ) const;
 
-        bool operator==( const vec2Type other ) const;
-        bool operator!=( const vec2Type other ) const;
+        //************************************************************
+        // Friend functions, could probably be outside of the struct
+        template <typename Y>
+        friend constexpr vec2Type operator+( vec2Type left, const vec2dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec2Type operator-( vec2Type left, const vec2dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec2Type operator*( vec2Type left, const vec2dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec2Type operator/( vec2Type left, const vec2dTemplate<Y>& right );
 
         // Output operators, overloaded
         template <typename Y>

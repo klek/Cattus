@@ -43,62 +43,62 @@ namespace muggy::math
         };
 
         // Constructors
-        mat4Template();
-        mat4Template( T diagonal );
-        mat4Template( const mat4Type& m );
+        constexpr mat4Template();
+        constexpr mat4Template( T diagonal );
+        constexpr mat4Template( const mat4Type& m );
 
         // Member functions
         // Support for getting elements
-        vec4Type getColumn( int index );
-        vec4Type getRow( int index );
-        vType getElement( int index );
+        constexpr vec4Type getColumn( int index );
+        constexpr vec4Type getRow( int index );
+        constexpr vType getElement( int index );
         
         // Matrix multiplication
-        mat4Type& multiply( const mat4Type& other );
+        constexpr mat4Type& multiply( const mat4Type& other );
 
         // Vector3d-Matrix4x4 multiplication
-        vec3Type multiply( const vec3Type& other ) const;
+        constexpr vec3Type multiply( const vec3Type& other ) const;
 
         // Vector4d-Matrix4x4 multiplication
-        vec4Type multiply( const vec4Type& other ) const;
+        constexpr vec4Type multiply( const vec4Type& other ) const;
 
         // Math operator overload
         template <typename Y>
-        friend mat4Type operator*( mat4Type left, const mat4Template<Y>& right );
+        friend constexpr mat4Type operator*( mat4Type left, const mat4Template<Y>& right );
         template <typename Y>
-        friend vec3dTemplate<Y> operator*( const mat4Type& left, 
-                                           const vec3dTemplate<Y>& right );
+        friend constexpr vec3dTemplate<Y> operator*( const mat4Type& left, 
+                                                     const vec3dTemplate<Y>& right );
         template <typename Y>
-        friend vec4dTemplate<Y> operator*( const mat4Type& left, 
-                                           const vec4dTemplate<Y>& right );
+        friend constexpr vec4dTemplate<Y> operator*( const mat4Type& left, 
+                                                     const vec4dTemplate<Y>& right );
         
-        mat4Type& operator*=( const mat4Type& other );
+        constexpr mat4Type& operator*=( const mat4Type& other );
 
         // Identity matrix
-        static mat4Type identity();
+        static constexpr mat4Type identity();
 
         // Orthographics matrix
-        static mat4Type orthographic( vType left, 
-                                      vType right, 
-                                      vType bottom, 
-                                      vType top, 
-                                      vType near, 
-                                      vType far );
+        static constexpr mat4Type orthographic( vType left, 
+                                                vType right, 
+                                                vType bottom, 
+                                                vType top, 
+                                                vType near, 
+                                                vType far );
 
         // Perspective matrix
-        static mat4Type perspective( vType fov, 
-                                     vType aspectRatio, 
-                                     vType near, 
-                                     vType far );
+        static constexpr mat4Type perspective( vType fov, 
+                                               vType aspectRatio, 
+                                               vType near, 
+                                               vType far );
 
         // Translation matrix
-        static mat4Type translation( const vec3Type& translation );
+        static constexpr mat4Type translation( const vec3Type& translation );
 
         // Rotation matrix
-        static mat4Type rotation( vType angle, const vec3Type& axis );
+        static constexpr mat4Type rotation( vType angle, const vec3Type& axis );
 
         // Scale matrix
-        static mat4Type scale(const vec3Type& scale);
+        static constexpr mat4Type scale(const vec3Type& scale);
 
         // Output operators, overloaded
         template <typename Y>

@@ -47,7 +47,7 @@ namespace muggy::math
     //****************************************************************
 
     //****************************************************************
-    // Typedefins for standard 3D vectors
+    // Typedefines for standard 3D vectors
     typedef vec3dTemplate<float>        fv3d;
 
     // Unsigned integers, 8-bit to 64-bit
@@ -64,7 +64,7 @@ namespace muggy::math
     //****************************************************************
 
     //****************************************************************
-    // Typedefins for standard 2D vectors
+    // Typedefines for standard 2D vectors
     typedef vec2dTemplate<float>        fv2d;
 
     // Unsigned integers, 8-bit to 64-bit

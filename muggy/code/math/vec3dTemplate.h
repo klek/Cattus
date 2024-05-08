@@ -34,38 +34,42 @@ namespace muggy::math
         };
         
         // Constructors
-        vec3dTemplate();
-        vec3dTemplate( const vType& _x, 
-                       const vType& _y, 
-                       const vType& _z );
-        vec3dTemplate( const vec3Type& _v );
-        explicit vec3dTemplate( const vType (&_arr)[3] );
+        constexpr vec3dTemplate();
+        constexpr vec3dTemplate( const vType& _s );
+        constexpr vec3dTemplate( const vType& _x, 
+                                 const vType& _y, 
+                                 const vType& _z );
+        constexpr vec3dTemplate( const vec3Type& _v );
+        constexpr explicit vec3dTemplate( const vType (&_arr)[3] );
 
         // Member functions
         // Implement basic math functions for 3D vectors
-        vec3Type& add( const vec3Type& other );
-        vec3Type& subtract( const vec3Type& other );
-        vec3Type& multiply( const vec3Type& other );
-        vec3Type& divide( const vec3Type& other );
+        constexpr vec3Type& add( const vec3Type& other );
+        constexpr vec3Type& subtract( const vec3Type& other );
+        constexpr vec3Type& multiply( const vec3Type& other );
+        constexpr vec3Type& divide( const vec3Type& other );
 
         // Math operators overload
         // NOTE(klek): Simply calls above math functions
-        template <typename Y>
-        friend vec3Type operator+( vec3Type left, const vec3dTemplate<Y>& right );
-        template <typename Y>
-        friend vec3Type operator-( vec3Type left, const vec3dTemplate<Y>& right );
-        template <typename Y>
-        friend vec3Type operator*( vec3Type left, const vec3dTemplate<Y>& right );
-        template <typename Y>
-        friend vec3Type operator/( vec3Type left, const vec3dTemplate<Y>& right );
+        constexpr vec3Type& operator+=( const vec3Type& other );
+        constexpr vec3Type& operator-=( const vec3Type& other );
+        constexpr vec3Type& operator*=( const vec3Type& other );
+        constexpr vec3Type& operator/=( const vec3Type& other );
 
-        vec3Type& operator+=( const vec3Type& other );
-        vec3Type& operator-=( const vec3Type& other );
-        vec3Type& operator*=( const vec3Type& other );
-        vec3Type& operator/=( const vec3Type& other );
+        // Boolean operators overload
+        constexpr bool operator==( const vec3Type other ) const;
+        constexpr bool operator!=( const vec3Type other ) const;
 
-        bool operator==( const vec3Type other ) const;
-        bool operator!=( const vec3Type other ) const;
+        //************************************************************
+        // Friend functions, could probably be outside of the struct
+        template <typename Y>
+        friend constexpr vec3Type operator+( vec3Type left, const vec3dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec3Type operator-( vec3Type left, const vec3dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec3Type operator*( vec3Type left, const vec3dTemplate<Y>& right );
+        template <typename Y>
+        friend constexpr vec3Type operator/( vec3Type left, const vec3dTemplate<Y>& right );
 
         // Output operators, overloaded
         template <typename Y>
