@@ -9,14 +9,8 @@
 #if !defined(MATH_H)
 #define MATH_H
 
-//#include "vec2d.h"
-//#include "vec3d.h"
-//#include "vec4d.h"
-//#include "mat4.h"
 #include "maths_funcs.h"
-#include "vec2dTemplate.h"
-#include "vec3dTemplate.h"
-#include "vec4dTemplate.h"
+#include "vecTemplate.h"
 #include "mat4Template.h"
 
 namespace muggy::math
@@ -87,18 +81,8 @@ namespace muggy::math
     typedef i32v2d                      POINT;
 
     // Floating point objects
-    typedef fv4d                        QUATERNION;
+    typedef quaternion<float>           fquat;
     
-    // NOTE(klek): This is a temporary solution to allow conversion
-    //             between Euler to Quaternion
-    // TODO(klek): Implement Quaternion class or similar functionality
-    //             in the v4d class
-    //
-    // Defining Quaternion conversion functions
-    //
-    math::fv4d toQuaternionFromEuler( float& roll, float& pitch, float& yaw );
-    math::fv4d toQuaternionFromEuler( math::fv3d euler );
-
 } // namespace muggy::math
 
 

@@ -18,7 +18,7 @@ namespace muggy::math
     //
     // TODO(klek): Consider adding own implementations for these functions
     template <typename T>
-    T maths_sin( T x ) 
+    constexpr inline T maths_sin( T x ) 
     { 
         return sin( x ); 
     }
@@ -28,7 +28,7 @@ namespace muggy::math
     //
     // TODO(klek): Consider adding own implementations for these functions
     template <typename T>
-    T maths_cos( T x )
+    constexpr inline T maths_cos( T x )
     {
         return cos( x ); 
     }
@@ -38,7 +38,7 @@ namespace muggy::math
     //
     // TODO(klek): Consider adding own implementations for these functions
     template <typename T>
-    T maths_tan( T x )
+    constexpr inline T maths_tan( T x )
     {
         return tan( x ); 
     }
@@ -48,16 +48,26 @@ namespace muggy::math
     //
     // TODO(klek): Consider adding own implementations for these functions
     template <typename T>
-    T maths_abs( T x )
+    constexpr inline T maths_abs( T x )
     {
         return abs( x );
+    }
+
+    //
+    // Defining cosine functions and overloads
+    //
+    // TODO(klek): Consider adding own implementations for these functions
+    template <typename T>
+    constexpr inline T maths_sqrt( T x )
+    {
+        return sqrt( x );
     }
 
     //
     // Defining a toRadians function
     //
     template <typename T>
-    T toRadians( T degrees )
+    constexpr inline T toRadians( T degrees )
     {
 //        return degrees * ( M_PI / T( 180.0f ) );
         return degrees * ( MUGGY_PI / T( 180.0f ) );
