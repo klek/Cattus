@@ -11,6 +11,7 @@
 
 #include "../common/common.h"
 #include "../platform/window.h"
+#include "../../engineAPI/cameraAPI.h"
 
 namespace muggy::graphics
 {
@@ -44,6 +45,89 @@ namespace muggy::graphics
         graphics::surface surface{};
     };
 
+    struct camera_parameter
+    {
+        enum parameter : uint32_t
+        {
+            upDirection,
+            fieldOfView,
+            aspectRatio,
+            viewWidth,
+            viewHeight,
+            nearPlane,
+            farPlane,
+            view,
+            projection,
+            inverseProjection,
+            viewProjection,
+            inverseViewProjection,
+            type,
+            entityId,
+
+            count
+        };
+    };
+
+    struct camera_init_info
+    {
+        id::id_type         entityId{ id::invalid_id };
+        camera::type        type { };
+        math::fv3d          upDirection;
+        float               nearPlane;
+        float               farPlane;
+        // Adding unions here because one of the camera types uses
+        // fov and aspectRatio while the other camera type uses
+        // viewWidth and viewHeight
+        union
+        {
+            float fov;
+            float viewWidth;
+        };
+        union
+        {
+            float aspectRatio;
+            float viewHeight;
+        };
+    };
+
+    // Helper structure to create a perspective camera init info
+    struct perspective_camera_init_info : public camera_init_info
+    {
+        explicit perspective_camera_init_info( id::id_type id )
+        {
+            assert( id::isValid( id ) );
+            entityId = id;
+            type = camera::perspective;
+            // NOTE(klek): Considering a right-handed coordinate
+            //             system, the positive y-axis is here by
+            //             default representing the up-direction
+            upDirection = { 0.0f, 1.0f, 0.0f };
+            fov = 0.25f;
+            aspectRatio = 16.0f / 10.0f;
+            nearPlane = 0.001f;
+            farPlane = 10000.0f;
+        }
+    };
+
+    // Helper structure to create an orthographic camera init info
+    struct orthographic_camera_init_info : public camera_init_info
+    {
+        explicit orthographic_camera_init_info( id::id_type id )
+        {
+            assert( id::isValid( id ) );
+            entityId = id;
+            type = camera::orthographic;
+            // NOTE(klek): Considering a right-handed coordinate
+            //             system, the positive y-axis is here by
+            //             default representing the up-direction
+            upDirection = { 0.0f, 1.0f, 0.0f };
+            viewWidth = 1920;
+            viewHeight = 1080;
+            nearPlane = 0.001f;
+            farPlane = 10000.0f;
+        }
+    };
+
     enum class graphics_platform : uint32_t
     {
         OPEN_GL     = 0,
@@ -66,6 +150,9 @@ namespace muggy::graphics
     surface createSurface( platform::window window );
     void removeSurface( surface_id id );
 
+    // High-level create/remove camera
+    camera createCamera( camera_init_info info );
+    void removeCamera( camera_id id );
 }
 
 #endif

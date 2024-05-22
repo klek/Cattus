@@ -26,8 +26,13 @@ namespace muggy {
             constexpr entity_id getId( ) const { return m_Id; }
             constexpr bool isValid( ) const { return id::isValid( m_Id ); }
 
-            transform::component getTransform() const;
-            script::component getScript() const;
+            [[nodiscard]] transform::component getTransform() const;
+            [[nodiscard]] script::component getScript() const;
+
+            [[nodiscard]] math::fv4d getRotation( void ) const { return getTransform().getRotation(); }
+            [[nodiscard]] math::fv3d getOrientation( void ) const { return getTransform().getOrientation(); }
+            [[nodiscard]] math::fv3d getPosition( void ) const { return getTransform().getPosition(); }
+            [[nodiscard]] math::fv3d getScale( void ) const { return getTransform().getScale(); }
         private:
             entity_id m_Id;
         };
@@ -49,6 +54,16 @@ namespace muggy {
         protected:
             constexpr explicit entity_script( game_entity::entity e )
              : game_entity::entity( e.getId() ) {}
+
+            void setRotation( math::fv4d rotationQuaternion ) const { setRotation( this, rotationQuaternion ); }
+            void setOrientation( math::fv3d orientationVector ) const { setOrientation( this, orientationVector ); }
+            void setPosition( math::fv3d position ) const { setPosition( this, position ); }
+            void setScale( math::fv3d scale ) const { setScale( this, scale ); }
+
+            static void setRotation( const game_entity::entity * const entity, math::fv4d rotationQuaternion );
+            static void setOrientation( const game_entity::entity * const entity, math::fv3d orientationVector );
+            static void setPosition( const game_entity::entity * const entity, math::fv3d position );
+            static void setScale( const game_entity::entity * const entity, math::fv3d scale );
         };
 
         namespace detail

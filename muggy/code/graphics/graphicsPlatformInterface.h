@@ -30,6 +30,20 @@ namespace muggy::graphics
             void(*render)( surface_id );
         } surface;
 
+        struct {
+            camera(*create)( camera_init_info );
+            void(*remove)( camera_id );
+            void(*setParameter)( camera_id, camera_parameter::parameter,
+                                 const void * const, uint32_t );
+            void(*getParameter)( camera_id, camera_parameter::parameter,
+                                 void * const, uint32_t );
+        } camera;
+
+        struct {
+            id::id_type(*addSubmesh)( const uint8_t*& );
+            void(*removeSubmesh)( id::id_type );
+        } resources;
+
         // Initialize platform to a non-valid value
         graphics_platform platform = (graphics_platform)-1;
     };

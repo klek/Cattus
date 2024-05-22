@@ -156,4 +156,200 @@ namespace muggy::graphics
         gfx.surface.remove( id );
     }
 
+    camera createCamera( camera_init_info info )
+    {
+        return gfx.camera.create( info );
+    }
+
+    void removeCamera( camera_id id )
+    {
+        assert( id::isValid( id ) );
+        gfx.camera.remove( id );
+    }
+
+    //****************************************************************
+    // Camera class implementation
+    // NOTE(klek): The class is declared in engineAPI/cameraAPI.h
+    // Set functions
+    void camera::setUpDirection( math::fv3d upDir ) const
+    {
+        assert( isValid() );
+        gfx.camera.setParameter( m_Id, camera_parameter::upDirection,
+                                 &upDir , sizeof( upDir ) );
+    }
+
+    void camera::setFieldOfView( float fov ) const
+    {
+        assert( isValid() );
+        gfx.camera.setParameter( m_Id, camera_parameter::fieldOfView,
+                                 &fov , sizeof( fov ) );
+    }
+
+    void camera::setAspectRatio( float aspectRatio ) const
+    {
+        assert( isValid() );
+        gfx.camera.setParameter( m_Id, camera_parameter::aspectRatio,
+                                 &aspectRatio , sizeof( aspectRatio ) );
+    }
+
+    void camera::setViewWidth( float width ) const
+    {
+        assert( isValid() );
+        gfx.camera.setParameter( m_Id, camera_parameter::viewWidth,
+                                 &width , sizeof( width ) );
+    }
+
+    void camera::setViewHeight( float height ) const
+    {
+        assert( isValid() );
+        gfx.camera.setParameter( m_Id, camera_parameter::viewHeight,
+                                 &height , sizeof( height ) );
+    }
+
+    void camera::setRange( float nearPlane, float farPlane ) const
+    {
+        assert( isValid() );
+        gfx.camera.setParameter( m_Id, camera_parameter::nearPlane,
+                                 &nearPlane , sizeof( nearPlane ) );
+        gfx.camera.setParameter( m_Id, camera_parameter::farPlane,
+                                 &farPlane , sizeof( farPlane ) );
+    }
+
+    // Get functions
+    math::fmat4 camera::getView( void ) const
+    {
+        assert( isValid() );
+        math::fmat4 matrix;
+        gfx.camera.getParameter( m_Id, camera_parameter::view,
+                                 &matrix, sizeof( matrix ) );
+        return matrix;
+    }
+
+    math::fmat4 camera::getProjection( void ) const
+    {
+        assert( isValid() );
+        math::fmat4 matrix;
+        gfx.camera.getParameter( m_Id, camera_parameter::projection,
+                                 &matrix, sizeof( matrix ) );
+        return matrix;
+    }
+
+    math::fmat4 camera::getInverseProjection( void ) const
+    {
+        assert( isValid() );
+        math::fmat4 matrix;
+        gfx.camera.getParameter( m_Id, camera_parameter::inverseProjection,
+                                 &matrix, sizeof( matrix ) );
+        return matrix;
+    }
+
+    math::fmat4 camera::getViewProjection( void ) const
+    {
+        assert( isValid() );
+        math::fmat4 matrix;
+        gfx.camera.getParameter( m_Id, camera_parameter::viewProjection,
+                                 &matrix, sizeof( matrix ) );
+        return matrix;
+    }
+
+    math::fmat4 camera::getInverseViewProjection( void ) const
+    {
+        assert( isValid() );
+        math::fmat4 matrix;
+        gfx.camera.getParameter( m_Id, camera_parameter::inverseViewProjection,
+                                 &matrix, sizeof( matrix ) );
+        return matrix;
+    }
+
+    math::fv3d camera::getUpDirection( void ) const
+    {
+        assert( isValid() );
+        math::fv3d direction;
+        gfx.camera.getParameter( m_Id, camera_parameter::upDirection,
+                                 &direction, sizeof( direction ) );
+        return direction;
+    }
+
+    float camera::getNearPlane( void ) const
+    {
+        assert( isValid() );
+        float nearPlane;
+        gfx.camera.getParameter( m_Id, camera_parameter::nearPlane,
+                                 &nearPlane, sizeof( nearPlane ) );
+        return nearPlane;
+    }
+
+    float camera::getFarPlane( void ) const
+    {
+        assert( isValid() );
+        float farPlane;
+        gfx.camera.getParameter( m_Id, camera_parameter::farPlane,
+                                 &farPlane, sizeof( farPlane ) );
+        return farPlane;
+    }
+
+    float camera::getFieldOfView( void ) const
+    {
+        assert( isValid() );
+        float fov;
+        gfx.camera.getParameter( m_Id, camera_parameter::fieldOfView,
+                                 &fov, sizeof( fov ) );
+        return fov;
+    }
+
+    float camera::getAspectRatio( void ) const
+    {
+        assert( isValid() );
+        float aspectRatio;
+        gfx.camera.getParameter( m_Id, camera_parameter::aspectRatio,
+                                 &aspectRatio, sizeof( aspectRatio ) );
+        return aspectRatio;
+    }
+
+    float camera::getViewWidth( void ) const
+    {
+        assert( isValid() );
+        float viewWidth;
+        gfx.camera.getParameter( m_Id, camera_parameter::viewWidth,
+                                 &viewWidth, sizeof( viewWidth ) );
+        return viewWidth;
+    }
+
+    float camera::getViewHeight( void ) const
+    {
+        assert( isValid() );
+        float viewHeight;
+        gfx.camera.getParameter( m_Id, camera_parameter::viewHeight,
+                                 &viewHeight, sizeof( viewHeight ) );
+        return viewHeight;
+    }
+
+    camera::type camera::getProjectionType( void ) const
+    {
+        assert( isValid() );
+        camera::type type;
+        gfx.camera.getParameter( m_Id, camera_parameter::type,
+                                 &type, sizeof( type ) );
+        return type;
+    }
+
+    id::id_type camera::getEntityId( void ) const
+    {
+        assert( isValid() );
+        id::id_type entityId;
+        gfx.camera.getParameter( m_Id, camera_parameter::entityId,
+                                 &entityId, sizeof( entityId ) );
+        return entityId;
+    }
+
+    //****************************************************************
+    id::id_type addSubmesh( const uint8_t *& data )
+    {
+        return gfx.resources.addSubmesh( data );
+    }
+
+    void removeSubmesh( id::id_type id )
+    {
+        return gfx.resources.removeSubmesh( id );
+    }
 }

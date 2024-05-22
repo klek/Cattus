@@ -23,11 +23,11 @@ namespace muggy
         // Copy the scale
         memcpy( &info.scale[0], &scale[0], sizeof( float ) * MAX_SCALE_ELEMENTS );
         // Convert euler rotation into quaternion
-        math::fv4d quat{ math::toQuaternionFromEuler( rotation[0],
-                                                        rotation[1],
-                                                        rotation[2] ) };
+        math::fquat q{ math::toQuaternionFromEuler( rotation[0],
+                                                    rotation[1],
+                                                    rotation[2] ) };
         // Store the vector as an array
-        float quat_arr[MAX_QUAT_ELEMENTS] = { quat.x, quat.y, quat.z, quat.w };
+        float quat_arr[MAX_QUAT_ELEMENTS] = { q.x, q.y, q.z, q.scalar };
         // Copy the converted rotation
         memcpy( &info.rotation[0], &quat_arr[0], sizeof( float ) * MAX_QUAT_ELEMENTS );
 

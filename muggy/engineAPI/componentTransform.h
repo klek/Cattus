@@ -23,9 +23,10 @@ namespace muggy::transform
         constexpr transform_id getId( ) const { return m_Id; }
         constexpr bool isValid( ) const { return id::isValid( m_Id ); }
 
-        math::fv3d getPosition() const;
-        math::fv4d getRotation() const;
-        math::fv3d getScale() const;
+        math::fv4d getRotation( void ) const;
+        math::fv3d getOrientation( void ) const;
+        math::fv3d getPosition( void ) const;
+        math::fv3d getScale( void ) const;
 
     private:
         transform_id m_Id;

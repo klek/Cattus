@@ -10,6 +10,7 @@
 #include "../graphicsPlatformInterface.h"
 #include "vulkanInterface.h"
 #include "vulkanCore.h"
+#include "vulkanCamera.h"
 
 namespace muggy::graphics::vulkan
 {
@@ -32,6 +33,17 @@ namespace muggy::graphics::vulkan
         platformInterface.surface.getWidth = core::getSurfaceWidth;
         platformInterface.surface.getHeight = core::getSurfaceHeight;
         platformInterface.surface.render = core::renderSurface;
+
+        // Assign camera function pointers
+        platformInterface.camera.create = camera::create;
+        platformInterface.camera.remove = camera::remove;
+        platformInterface.camera.setParameter = camera::setParameter;
+        platformInterface.camera.getParameter = camera::getParameter;
+
+        // TODO(klek): Add submesh functions here for the low-level
+        //             renderer
+        //platformInterface.resources.addSubmesh = ?;
+        //platformInterface.resources.removeSubmesh = ?;
 
         // Finally specify which platform this interface uses
         platformInterface.platform = graphics_platform::VULKAN;
