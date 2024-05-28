@@ -270,14 +270,14 @@ namespace muggy::graphics::vulkan::camera
                                                        m_NearPlane,
                                                        m_FarPlane );
             }
-            // TODO(klek): Implement the matrix inverse function in math
-            //m_InverseProjection = math::matrixInverse( m_Projection );
+            // Store the inverse projection matrix
+            m_InverseProjection = m_Projection.inverse( );
             m_IsDirty = false;
         }
-
+        // Calculate the view-projection matrix
         m_ViewProjection = m_View * m_Projection;
-        // TODO(klek): Implement the matrix inverse function in math
-        //m_InverseViewProjection = math::matrixInverse( m_ViewProjection );
+        // Store the inverse view-projection matrix
+        m_InverseViewProjection = m_ViewProjection.inverse( );
     }
 
     void vulkan_camera::setUpDirection( math::fv3d upDir )
