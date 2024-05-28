@@ -66,7 +66,14 @@ namespace muggy::math
         // Transpose
         constexpr inline mat4Type transpose( void ) const;
         constexpr inline mat4Type& transposeMe( void );
-        
+
+        // Inversion
+        constexpr inline mat4Type inverse( void ) const;
+        constexpr inline mat4Type& invertMe( void );
+
+        // Determinant
+        constexpr inline vType determinant( void ) const;
+
         // Matrix addition
         constexpr inline mat4Type& add( const mat4Type& rhs );
         // Matrix subtraction

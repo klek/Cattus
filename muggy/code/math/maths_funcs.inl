@@ -1,11 +1,10 @@
 //********************************************************************
-//  File:    maths_funcs.cpp
+//  File:    maths_funcs.inl
 //  Date:    Sat, 18 Nov 2023: 00:22
 //  Version: 
 //  Author:  klek
 //  Notes:   
 //********************************************************************
-#ifdef INCLUDE_MATHS_FUNCS_CPP
 
 #include "maths_funcs.h"
 #include <cmath>
@@ -20,7 +19,7 @@ namespace muggy::math
     template <typename T>
     constexpr inline T maths_sin( T x ) 
     { 
-        return sin( x ); 
+        return std::sin( x ); 
     }
 
     //
@@ -30,7 +29,7 @@ namespace muggy::math
     template <typename T>
     constexpr inline T maths_cos( T x )
     {
-        return cos( x ); 
+        return std::cos( x ); 
     }
 
     //
@@ -40,7 +39,7 @@ namespace muggy::math
     template <typename T>
     constexpr inline T maths_tan( T x )
     {
-        return tan( x ); 
+        return std::tan( x ); 
     }
     
     //
@@ -50,7 +49,7 @@ namespace muggy::math
     template <typename T>
     constexpr inline T maths_abs( T x )
     {
-        return abs( x );
+        return std::abs( x );
     }
 
     //
@@ -60,7 +59,7 @@ namespace muggy::math
     template <typename T>
     constexpr inline T maths_sqrt( T x )
     {
-        return sqrt( x );
+        return std::sqrt( x );
     }
 
     //
@@ -69,10 +68,25 @@ namespace muggy::math
     template <typename T>
     constexpr inline T toRadians( T degrees )
     {
-//        return degrees * ( M_PI / T( 180.0f ) );
-        return degrees * ( MUGGY_PI / T( 180.0f ) );
+        return degrees * T( ( MUGGY_PI / 180.0f ) );
+    }
+
+    //
+    // Defining a toRadians function
+    //
+    template <typename T>
+    constexpr inline T toDegrees( T radians )
+    {
+        return radians * T( ( 180.0f / MUGGY_PI ) );
+    }
+
+    //
+    // Checks if value is approximate zero
+    //
+    template <typename T>
+    constexpr inline bool isApproxZero( T val )
+    {
+        return ( maths_abs( val ) < T( MUGGY_EPSILON ) );
     }
 
 } // namespace muggy:math
-
-#endif

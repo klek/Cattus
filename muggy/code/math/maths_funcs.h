@@ -57,12 +57,22 @@ namespace muggy::math
     //
     template <typename T>
     constexpr inline T toRadians( T degrees );
+
+    //
+    // Defining a toDegrees function
+    //
+    template <typename T>
+    constexpr inline T toDegrees( T radians );
+
+    //
+    // Checks if value is approximate zero
+    //
+    template <typename T>
+    constexpr inline bool isApproxZero( T val );
 }
 
 #ifndef USE_MATH_EXTERNAL
-#define INCLUDE_MATHS_FUNCS_CPP            1
-#include "maths_funcs.cpp"
-#undef INCLUDE_MATHS_FUNCS_CPP
+#include "maths_funcs.inl"
 #endif
 
 #endif

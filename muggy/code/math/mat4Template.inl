@@ -170,6 +170,216 @@ namespace muggy::math
         return *this;
     }
 
+    // Returns the inverted version of the current matrix as a new
+    // matrix. The original matrix is not changed
+    // This matrix inversion has been implemented using Gauss-Jordan
+    // elimination, read more on:
+    // https://en.wikipedia.org/wiki/Gaussian_elimination#Finding_the_inverse_of_a_matrix
+    // or:
+    // https://scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/matrix-inverse/matrix-inverse.html
+    //
+    template <typename T>
+    constexpr inline mat4Template<T> mat4Template<T>::inverse( void ) const
+    {
+        // TODO(klek): Implement this!
+        // Local variables
+        mat4Template<T> inv { 1.0f };
+        mat4Template<T> M{ *this };
+        uint32_t row = 0;
+        uint32_t col = 0;
+        //uint32_t it = 0;
+        uint32_t bigRow = 0;
+        T pvtVal = 0;
+
+        // Iterate through every column
+        for ( col = 0; col < 4; col++ )
+        {
+            // Find the largest element in the current column, if this
+            // element is not in the diagonal spot (pivot spot) we
+            // need to swap rows
+            // NOTE(klek): We only search below the current pivot spot
+            //             in order not to move around elements in the
+            //             first column
+
+            // Use this columns pivot spot as the starting value
+            bigRow = col;
+            pvtVal = M.m[col][col];
+
+            // Loop through the rows
+            for ( row = col + 1; row < 4; row++ )
+            {
+                // Check if the current pivot value is greater than
+                // the current rows value
+                if ( math::maths_abs( M.m[row][col] ) > math::maths_abs( M.m[bigRow][col] ) )
+                {
+                    // Found a larger number, store the row number
+                    bigRow = row;
+                    pvtVal = M.m[row][col];
+                }
+            }
+
+            // We should now know which row contains the largest number
+            // for this column.
+            // First check that this value is not zero (otherwise this
+            // is a singular matrix)
+            if ( isApproxZero( pvtVal ) )
+            {
+                // Matrix is singular, return the identity matrix
+                return mat4Template<T>{ 1.0f };
+            }
+
+            // Second swap the row that contains this number into the
+            // current pivot spot (ie the diagonal spot)
+            if ( bigRow != col )
+            {
+                T temp;
+                // Swap the rows
+                for ( uint32_t j = 0; j < 4; j++ )
+                {
+                    // For the working matrix
+                    temp = M.m[col][j];
+                    M.m[col][j] = M.m[bigRow][j];
+                    M.m[bigRow][j] = temp;
+                    // For the inverted matrix
+                    temp = inv.m[col][j];
+                    inv.m[col][j] = inv.m[bigRow][j];
+                    inv.m[bigRow][j] = temp;
+                }
+            }
+
+            // Now we need to eliminate all numbers below the pivot
+            // spot (not the pivot itself), in this column. This means
+            // every slot starting from [col+1][col], the diagonal
+            // NOTE(klek): We also need to do the same modification
+            //             to all column-members of every row, thus
+            //             the double loop
+            for ( uint32_t i = col + 1; i < 4; i++ )
+            {
+                // NOTE(klek): i is the current row we are working on
+                //             j is the current column we are working
+                //             on, in the ith row
+
+                //T coeff = M.m[i][col] / M.m[col][col];
+                T coeff = M.m[i][col] / pvtVal;
+                for ( uint32_t j = 0; j < 4; j++ )
+                {
+                    // For the working matrix
+                    M.m[i][j] -= coeff * M.m[col][j];
+                    // For the inverted matrix
+                    inv.m[i][j] -= coeff * inv.m[col][j];
+                }
+            }
+
+            // Last thing to do before we go to the next column is to
+            // divide the current row with its pivot value, which
+            // should result in the actual pivot value being 1
+            for ( uint32_t j = 0; j < 4; j++ )
+            {
+                // NOTE(klek): We use col as the row indicator here
+                // For the working matrix
+                M.m[col][j] /= pvtVal;
+                // For the inverted matrix
+                inv.m[col][j] /= pvtVal;
+            }
+        }
+        // Here we should now have a matrix in row-echelon form;
+        //
+        //      1   a   b   c
+        //      0   1   d   e
+        //      0   0   1   f
+        //      0   0   0   1
+        //
+        // which means that we only have to solve the remaining
+        // matrix with back substitution
+
+        // Continue with the upper part of the matrix and solve this
+        // by back substitution. Here we iterate by row instead of 
+        // column
+        // NOTE(klek): The last row is already done (should be 0, 0,
+        //             0, 1)
+        for ( row = 0; row < 3; row++ )
+        {
+            // NOTE(klek): Reducing row by row, using the row below
+            //             the current one to remove each element
+            //             This utilizes the pivot value which is 1,
+            //             to guarantee the removal of the desired
+            //             element
+            // NOTE(klek): The first column is already done, hence we
+            //             start with row + 1 to always be above the
+            //             pivot spot
+            for ( uint32_t j = row + 1; j < 4; j++ )
+            {
+                // Grab the element we want to reduce
+                T coeff = M.m[row][j];
+                // Iterate over every column in this row such that
+                // we calculate the entire row
+                for ( col = 0; col < 4; col++ )
+                {
+                    // Subtract the coefficient multiplied by the
+                    // element on the jth row (essentially the row
+                    // below the current one)
+                    M.m[row][col] -= coeff * M.m[j][col];
+                    inv.m[row][col] -= coeff * inv.m[j][col];
+                }
+            }
+        }
+
+        return inv;
+    }
+
+    // Returns a reference to the inverted version of the current
+    // matrix. This function changes the current matrix to its
+    // inverted version!
+    template <typename T>
+    constexpr inline mat4Template<T>& mat4Template<T>::invertMe( void )
+    {
+        mat4Template<T> inverted { inverse() };
+
+        *this = inverted;
+        return *this;
+    }
+
+    // Returns the determinant of the matrix
+    //
+    //      | a   b   c   d |       | m00 m01 m02 m03 |
+    //  M = | e   f   g   h |   =   | m10 m11 m12 m13 |
+    //      | i   j   k   l |       | m20 m21 m22 m23 |
+    //      | m   n   o   p |       | m30 m31 m32 m33 |
+    //
+    // det(M) = afkp - afol - agjp + agnl + ahjo - ahnk -
+    //          bekp + beol + bgip - bgml - bhio + bhmk +
+    //          cejp - cenl - cfip + cfml + chin - chmj -
+    //          dejo + denk + dfio - dfmk - dgin + dgmj
+    template <typename T>
+    constexpr inline T mat4Template<T>::determinant( void ) const
+    {
+        // TODO(klek): Implement this!
+        return ( m[0][0] * m[1][1] * m[2][2] * m[3][3] -    // afkp
+                 m[0][0] * m[1][1] * m[3][2] * m[2][3] -    // afpö
+                 m[0][0] * m[1][2] * m[2][1] * m[3][3] +    // agjp
+                 m[0][0] * m[1][2] * m[3][1] * m[2][3] +    // agnl
+                 m[0][0] * m[1][3] * m[2][1] * m[3][2] -    // ahjo
+                 m[0][0] * m[1][3] * m[3][1] * m[2][2] -    // ahnk
+                 m[0][1] * m[1][0] * m[2][2] * m[3][3] +    // bekp
+                 m[0][1] * m[1][0] * m[3][2] * m[2][3] +    // beol
+                 m[0][1] * m[1][2] * m[2][0] * m[3][3] -    // bgip
+                 m[0][1] * m[1][2] * m[3][0] * m[2][3] -    // bgml
+                 m[0][1] * m[1][3] * m[2][0] * m[3][2] +    // bhio
+                 m[0][1] * m[1][3] * m[3][0] * m[2][2] +    // bhmk
+                 m[0][2] * m[1][0] * m[2][1] * m[3][3] -    // cejp
+                 m[0][2] * m[1][0] * m[3][1] * m[2][3] -    // cenl
+                 m[0][2] * m[1][1] * m[2][0] * m[3][3] +    // cfip
+                 m[0][2] * m[1][1] * m[3][0] * m[2][3] +    // cfml
+                 m[0][2] * m[1][3] * m[2][0] * m[3][1] -    // chin
+                 m[0][2] * m[1][3] * m[3][0] * m[2][1] -    // chmj
+                 m[0][3] * m[1][0] * m[2][1] * m[3][2] +    // dejo
+                 m[0][3] * m[1][0] * m[3][1] * m[2][2] +    // denk
+                 m[0][3] * m[1][1] * m[2][0] * m[3][2] -    // dfio
+                 m[0][3] * m[1][1] * m[3][0] * m[2][2] -    // dfmk
+                 m[0][3] * m[1][2] * m[2][0] * m[3][1] +    // dgin
+                 m[0][3] * m[1][2] * m[3][0] * m[2][1]  );  // dgmj
+    }
+
     // Matrix addition
     template <typename T>
     constexpr inline mat4Template<T>& mat4Template<T>::add( const mat4Template<T>& rhs )
@@ -990,7 +1200,7 @@ namespace muggy::math
             stream << "       ( ";
             for ( int col = 0; col < rowColSize; col++ )
             {
-                stream << mat.elements[ rowColSize * col + row ] << ", ";
+                stream << mat.elements[ rowColSize * row + col ] << ", ";
             }
             stream << ")\n";// << std::endl;
         }
