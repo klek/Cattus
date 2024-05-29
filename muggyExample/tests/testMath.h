@@ -1,15 +1,13 @@
 //********************************************************************
-//  File:    testRenderer.h
-//  Date:    Thu, 07 Mar 2024: 16:22
+//  File:    testMath.h
+//  Date:    Mon, 27 May 2024: 20:51
 //  Version: 
 //  Author:  klek
 //  Notes:   
 //********************************************************************
 
-#if !defined(TEST_RENDERER_H)
-#define TEST_RENDERER_H
-
-#include "test.h"
+#if !defined(TEST_MATH_H)
+#define TEST_MATH_H
 
 class engineTest : public test
 {
@@ -21,5 +19,6 @@ public:
 private:
     // Any internal variables?
 };
+
 
 #endif

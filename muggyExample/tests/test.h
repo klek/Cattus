@@ -18,6 +18,7 @@
 #define TEST_FREELIST           0
 #define TEST_VECTOR             0
 #define TEST_RENDERER           1
+#define TEST_MATH               0
 
 class test
 {

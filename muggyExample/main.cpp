@@ -23,6 +23,8 @@
 #include "tests/testVector.h"
 #elif TEST_RENDERER
 #include "tests/testRenderer.h"
+#elif TEST_MATH
+#include "tests/testMath.h"
 #else
 #error One of the tests have to be enabled in test.h
 #endif
